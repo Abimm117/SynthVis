@@ -111,6 +111,12 @@ public class SynthController : MonoBehaviour
         key.GetComponent<MeshRenderer>().material = key.name.Contains("b") ? blackKey : whiteKey;
     }
 
+    IEnumerator TurnOffNoteAfterDelay(string noteName, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        ReleaseOscillatorFromNote(noteName);
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -203,11 +209,5 @@ public class SynthController : MonoBehaviour
     public Instrument CurrentInstrument()
     {
         return instruments[InstrumentNumber];
-    }
-
-    IEnumerator TurnOffNoteAfterDelay(string noteName, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        ReleaseOscillatorFromNote(noteName);
-    }
+    }  
 }

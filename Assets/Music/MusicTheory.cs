@@ -22,34 +22,34 @@ public class MusicTheory
 
         for (int i = 0; i < 60; i++)
         {
-            total_frequencies[i] = Mathf.RoundToInt(440 * (Mathf.Pow(2f, (i - 33) / 12f)));
+            total_frequencies[i] = 220 * Mathf.Pow(2f, (i - 34) / 12f);
         }
         for (int i = 0; i < notes.Count; i++)
         {
             root_index.Add(notes[i], i);
         }
         
-        keyboardPianoMap.Add(KeyCode.A, "C1");
-        keyboardPianoMap.Add(KeyCode.W, "Db1");
-        keyboardPianoMap.Add(KeyCode.S, "D1");
-        keyboardPianoMap.Add(KeyCode.E, "Eb1");
-        keyboardPianoMap.Add(KeyCode.D, "E1");
-        keyboardPianoMap.Add(KeyCode.F, "F1");
-        keyboardPianoMap.Add(KeyCode.T, "Gb1");
-        keyboardPianoMap.Add(KeyCode.G, "G1");
-        keyboardPianoMap.Add(KeyCode.Y, "Ab1");
-        keyboardPianoMap.Add(KeyCode.H, "A1");
-        keyboardPianoMap.Add(KeyCode.U, "Bb1");
-        keyboardPianoMap.Add(KeyCode.J, "B1");
-        keyboardPianoMap.Add(KeyCode.K, "C2");
-        keyboardPianoMap.Add(KeyCode.O, "Db2");
-        keyboardPianoMap.Add(KeyCode.L, "D2");
-        keyboardPianoMap.Add(KeyCode.P, "Eb2");
-        keyboardPianoMap.Add(KeyCode.Semicolon, "E2");
+        keyboardPianoMap.Add(KeyCode.A, "C2");
+        keyboardPianoMap.Add(KeyCode.W, "Db2");
+        keyboardPianoMap.Add(KeyCode.S, "D2");
+        keyboardPianoMap.Add(KeyCode.E, "Eb2");
+        keyboardPianoMap.Add(KeyCode.D, "E2");
+        keyboardPianoMap.Add(KeyCode.F, "F2");
+        keyboardPianoMap.Add(KeyCode.T, "Gb2");
+        keyboardPianoMap.Add(KeyCode.G, "G2");
+        keyboardPianoMap.Add(KeyCode.Y, "Ab2");
+        keyboardPianoMap.Add(KeyCode.H, "A2");
+        keyboardPianoMap.Add(KeyCode.U, "Bb2");
+        keyboardPianoMap.Add(KeyCode.J, "B2");
+        keyboardPianoMap.Add(KeyCode.K, "C3");
+        keyboardPianoMap.Add(KeyCode.O, "Db3");
+        keyboardPianoMap.Add(KeyCode.L, "D3");
+        keyboardPianoMap.Add(KeyCode.P, "Eb3");
+        keyboardPianoMap.Add(KeyCode.Semicolon, "E3");
 
-        for (int i = 38; i < 86; i++)
+        for (int i = 24; i < 84; i++)
         {
-            midiPianoMap.Add(i, notes[i - 26]);
+            midiPianoMap.Add(i, notes[i - 24]);
             midiKeyNumbers.Add(i);
         }
     }
