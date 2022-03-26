@@ -1,0 +1,8 @@
+Audio generating tutorial:
+https://github.com/OneLoneCoder/synth/tree/master
+
+Spectrogram tutorial:
+https://github.com/swharden/Spectrogram
+
+MIDI:
+https://github.com/keijiro/MidiJack
