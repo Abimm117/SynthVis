@@ -21249,7 +21249,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1940554028}
   m_Layer: 0
-  m_Name: Plot (6)
+  m_Name: MainPlot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -22072,13 +22072,16 @@ MonoBehaviour:
   plotPointPrefab: {fileID: 3644319501268584781, guid: 3d90b7898425fc04ea5e517047fd438c, type: 3}
   refreshVisuals: 1
   plotRefreshSpeed: 0.1
+  nearestVowel: 
   spec1: {fileID: 684625538}
   spec2: {fileID: 1539050738}
   spec3: {fileID: 1762448856}
   spec4: {fileID: 756976995}
   spec5: {fileID: 487549300}
+  spec6: {fileID: 0}
+  spec7: {fileID: 0}
+  spec8: {fileID: 0}
   currentSpectrumData: []
-  nearestVowel: 
 --- !u!4 &2042851540
 Transform:
   m_ObjectHideFlags: 0

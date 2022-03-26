@@ -47,6 +47,9 @@ public class SynthVisualizer : MonoBehaviour
     List<float> ahy = new List<float>();
     List<float> eey = new List<float>();
     List<float> ooy = new List<float>();
+    public string nearestVowel;
+
+    //spectra
     public GetSpectrumData spec1;
     public GetSpectrumData spec2;
     public GetSpectrumData spec3;
@@ -56,8 +59,7 @@ public class SynthVisualizer : MonoBehaviour
     public GetSpectrumData spec7;
     public GetSpectrumData spec8;
     GetSpectrumData[] spectra;
-    public List<float> currentSpectrumData;
-    public string nearestVowel;
+    public List<float> currentSpectrumData; 
     int nSpectrum = 550;
     #endregion
 
