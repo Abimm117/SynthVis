@@ -52,6 +52,10 @@ public class SynthVisualizer : MonoBehaviour
     public GetSpectrumData spec3;
     public GetSpectrumData spec4;
     public GetSpectrumData spec5;
+    public GetSpectrumData spec6;
+    public GetSpectrumData spec7;
+    public GetSpectrumData spec8;
+    GetSpectrumData[] spectra;
     public List<float> currentSpectrumData;
     public string nearestVowel;
     int nSpectrum = 550;
@@ -91,6 +95,7 @@ public class SynthVisualizer : MonoBehaviour
             go.transform.localPosition = pos;
             go.transform.localScale = .05f * Vector3.one;
         }
+        spectra = new GetSpectrumData[] { spec1, spec2, spec3, spec4, spec5, spec6, spec7, spec8 };
 
         LoadVowels();
 
@@ -120,9 +125,18 @@ public class SynthVisualizer : MonoBehaviour
 
         // add up all spectrum data coming from instrument voices
         List<float> allSpectrumVals = new List<float>();
+        List<float[]> allSpectra = new List<float[]>();
+        for (int j = 0; j < 8; j++)
+        {
+            allSpectra.Add(spectra[j].GetSpectrum());
+        }
         for (int i = 0; i < nSpectrum; i++)
         {
-            float val = spec1.GetSpectrum()[i] + spec2.GetSpectrum()[i] + spec3.GetSpectrum()[i] + spec4.GetSpectrum()[i] + spec5.GetSpectrum()[i];
+            float val = 0f;
+            for (int j = 0; j < 8; j++)
+            {
+                val += allSpectra[j][i];
+            }
             allSpectrumVals.Add(val);
         }
 
@@ -346,7 +360,7 @@ public class SynthVisualizer : MonoBehaviour
         }
     }
 
-    void LoadVowel(string filename, ref List<float> ylist)
+    void LoadHistogram(string filename, ref List<float> ylist)
     {
         using (StreamReader sr = new StreamReader(filename))
         {
@@ -367,9 +381,9 @@ public class SynthVisualizer : MonoBehaviour
 
     void LoadVowels()
     {
-        LoadVowel("Assets/vowels/ah_interp.csv", ref ahy);
-        LoadVowel("Assets/vowels/ee_interp.csv", ref eey);
-        LoadVowel("Assets/vowels/oo_interp.csv", ref ooy);
+        LoadHistogram("Assets/vowels/ah_interp.csv", ref ahy);
+        LoadHistogram("Assets/vowels/ee_interp.csv", ref eey);
+        LoadHistogram("Assets/vowels/oo_interp.csv", ref ooy);
     }
 
     float MSE(List<float> l1, List<float> l2)
