@@ -13,6 +13,7 @@ public class SynthVisualizer : MonoBehaviour
     public GameObject SynthSoundObjects1Parent;
     public GameObject SynthSoundObjects2Parent;
     public GameObject SynthSoundObjects3Parent;
+    GameObject[] soundObjectsParents;
     public int[] heights = new int[] { 1, 3, 5 };
     public int[] widths = new int[] { -1, 0, 1 };
     public float[] noises = new float[] { 0f, 0.25f, 0.5f, 0.75f, 1f };
@@ -47,7 +48,7 @@ public class SynthVisualizer : MonoBehaviour
     List<float> ahy = new List<float>();
     List<float> eey = new List<float>();
     List<float> ooy = new List<float>();
-    public string nearestVowel;
+    string nearestVowel;
 
     //spectra
     public GetSpectrumData spec1;
@@ -59,7 +60,7 @@ public class SynthVisualizer : MonoBehaviour
     public GetSpectrumData spec7;
     public GetSpectrumData spec8;
     GetSpectrumData[] spectra;
-    public List<float> currentSpectrumData; 
+    List<float> currentSpectrumData; 
     int nSpectrum = 550;
     #endregion
 
@@ -98,7 +99,7 @@ public class SynthVisualizer : MonoBehaviour
             go.transform.localScale = .05f * Vector3.one;
         }
         spectra = new GetSpectrumData[] { spec1, spec2, spec3, spec4, spec5, spec6, spec7, spec8 };
-
+        soundObjectsParents = new GameObject[] { SynthSoundObjects0Parent, SynthSoundObjects1Parent, SynthSoundObjects2Parent, SynthSoundObjects3Parent };
         LoadVowels();
 
         currentSpectrumData = new List<float>();
@@ -264,6 +265,8 @@ public class SynthVisualizer : MonoBehaviour
 
     int GetSynthSoundObjectHeight()
     {
+        return currentSynthSoundObjectHeight;
+        /*
         if (nearestVowel == "ah")
         {
             return 5;
@@ -280,10 +283,13 @@ public class SynthVisualizer : MonoBehaviour
         {
             return currentSynthSoundObjectHeight;
         }
+        */
     }
 
     int GetSynthSoundObjectWidth()
     {
+        return currentSynthSoundObjectWidth;
+        /*
         if (nearestVowel == "ah")
         {
             return 0;
@@ -299,11 +305,13 @@ public class SynthVisualizer : MonoBehaviour
         else
         {
             return currentSynthSoundObjectWidth;
-        }
+        }*/
     }
 
     float GetSynthSoundObjectNoise()
     {
+        return currentSynthSoundObjectNoise;
+        /*
         if (nearestVowel == "ah")
         {
             return 0.5f;
@@ -319,7 +327,7 @@ public class SynthVisualizer : MonoBehaviour
         else
         {
             return currentSynthSoundObjectNoise;
-        }
+        }*/
     }
 
     IEnumerator SwitchTempObjectType()

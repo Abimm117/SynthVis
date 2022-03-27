@@ -16,6 +16,9 @@ public class Oscillator : MonoBehaviour
     public double frequency;
     public SoundEnvelope env;
     public float timeT = 0.0f;
+
+    public List<float> floatBuffer = new List<float>();
+    public bool storeDataInBuffer = false;
     #endregion
 
     private void Update()
@@ -51,7 +54,14 @@ public class Oscillator : MonoBehaviour
         for(int i = 0; i < data.Length; i += channels)
         {
             phase += increment;
-            data[i] = (float) (gain * env.getAmplitude(timeT) * instrument.CustomSynth((float)phase));
+            float soundData = (float)(gain * env.getAmplitude(timeT) * instrument.CustomSynth((float)phase));
+            data[i] = soundData;
+
+            if (storeDataInBuffer)
+            {
+                floatBuffer.Add(soundData);
+            }
+
             if (channels == 2)
             {
                 data[i + 1] = data[i];
@@ -62,5 +72,10 @@ public class Oscillator : MonoBehaviour
                 phase = 0.0;
             }
         }
+    }
+
+    public void ClearBuffer()
+    {
+        floatBuffer = new List<float>();
     }
 }
