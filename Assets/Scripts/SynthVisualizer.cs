@@ -9,6 +9,12 @@ public class SynthVisualizer : MonoBehaviour
     public SynthController synthController;
 
     // custom synth object
+    public GameObject sphereInstrument0;
+    Material sphere0mat;
+    public GameObject sphereInstrument1;
+    public GameObject sphereInstrument2;
+    public GameObject sphereInstrument3;
+
     public GameObject SynthSoundObjects0Parent;
     public GameObject SynthSoundObjects1Parent;
     public GameObject SynthSoundObjects2Parent;
@@ -60,8 +66,12 @@ public class SynthVisualizer : MonoBehaviour
     public GetSpectrumData spec7;
     public GetSpectrumData spec8;
     GetSpectrumData[] spectra;
-    List<float> currentSpectrumData; 
+    List<float> currentSpectrumData;
+    float currentSpectrumGiniCoeff;
     int nSpectrum = 550;
+
+    float timeT = 0f;
+    float nextTime = 0.1f;
     #endregion
 
     private void Awake()
@@ -107,6 +117,8 @@ public class SynthVisualizer : MonoBehaviour
         {
             currentSpectrumData.Add(0f);
         }
+
+        sphere0mat = sphereInstrument0.transform.GetComponent<MeshRenderer>().material;
     }
 
     // Start is called before the first frame update
@@ -114,6 +126,28 @@ public class SynthVisualizer : MonoBehaviour
     {
         StartCoroutine(DelayStartRefreshVisuals());
         StartCoroutine(SwitchTempObjectType());   
+    }
+
+    private void Update()
+    {
+        timeT += Time.deltaTime;
+        if (timeT > nextTime)
+        {
+            nextTime = timeT + 0.1f;
+
+            if (isPlaying)
+            {
+                sphereInstrument0.SetActive(true);
+                float noiseLevel = 200f * (1f - currentSpectrumGiniCoeff);
+                Debug.Log("noise " + noiseLevel);
+                sphere0mat.SetFloat("scale", noiseLevel);
+                Debug.Log("new noise val" + sphere0mat.GetFloat("scale"));
+            }
+            else
+            {
+                sphereInstrument0.SetActive(false);
+            }
+        }
     }
 
     IEnumerator DelayStartRefreshVisuals()
@@ -146,10 +180,23 @@ public class SynthVisualizer : MonoBehaviour
         //then, adjust currentSpectrumData so that it is bounded between 0 and 1 using the max val from allSpectrumVals
         float maxval = Mathf.Max(allSpectrumVals.ToArray());
         currentSpectrumData = new List<float>();
+        List<float> sortedSpectrumList = new List<float>();
+        float sum0 = 0f;
+        float sum1 = 0f;
         for (int i = 0; i < nSpectrum; i++)
         {
-            currentSpectrumData.Add(allSpectrumVals[i] / maxval);
+            float specVal = allSpectrumVals[i] / maxval;
+            sortedSpectrumList.Add(specVal);
+            currentSpectrumData.Add(specVal);
         }
+        sortedSpectrumList.Sort();
+               
+        for (int i = 0; i < nSpectrum; i++)
+        {
+            sum0 += (nSpectrum - i) * sortedSpectrumList[i];
+            sum1 += sortedSpectrumList[i];
+        }
+        currentSpectrumGiniCoeff = (1f / nSpectrum) * (nSpectrum + 1 - 2 * (sum0 / sum1));
 
         //determine the nearest vowel based on currentSpectrumData
         nearestVowel = GetNearestVowel();
@@ -157,7 +204,7 @@ public class SynthVisualizer : MonoBehaviour
         if (refreshVisuals)
         {
             RefreshPlot();
-            RefreshSynthSoundObject();
+            //RefreshSynthSoundObject();
         }
         StartCoroutine(RefreshVisuals());
     }
@@ -225,6 +272,24 @@ public class SynthVisualizer : MonoBehaviour
     {
         if (isPlaying)
         {
+            sphereInstrument0.SetActive(true);
+            float noiseLevel = 5f * (1f - currentSpectrumGiniCoeff);
+            Debug.Log("noise" + noiseLevel.ToString());
+            Material mat = sphereInstrument0.GetComponent<MeshRenderer>().material;
+            Debug.Log(mat.name);
+            mat.SetFloat("_scale", noiseLevel);
+            float newnoise = mat.GetFloat("_scale");
+            Debug.Log(newnoise);
+            Debug.Log("~~~~~~~~~");
+        }
+        else
+        {
+            sphereInstrument0.SetActive(false);
+        }
+        #region using pre-generated blender objects
+        /*
+        if (isPlaying)
+        {
             string _name = GetSynthSoundObjectName();
             if (currentSynthSoundObjectName == "")
             {
@@ -248,6 +313,8 @@ public class SynthVisualizer : MonoBehaviour
                 currentSynthSoundObjectName = "";
             }
         }
+        */
+        #endregion
     }
 
     string GetSynthSoundObjectName()
