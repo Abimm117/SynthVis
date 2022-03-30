@@ -169,7 +169,11 @@ public class SynthVisualizer : MonoBehaviour
             }
             else
             {
-                Sound0Object.SetActive(false);
+                for (int i = 0; i < 4; i++)
+                {
+                    soundObjects[i].SetActive(false);
+                }
+                
             }
         }
     }
