@@ -210,4 +210,9 @@ public class SynthController : MonoBehaviour
     {
         return instruments[InstrumentNumber];
     }  
+
+    public int CurrentInstrumentNumber()
+    {
+        return InstrumentNumber;
+    }
 }

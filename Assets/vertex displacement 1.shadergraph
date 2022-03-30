@@ -804,13 +804,13 @@
     },
     "m_Name": "scale",
     "m_DefaultReferenceName": "Vector1_5b94fbb7071b4505837f549d4c9a5b61",
-    "m_OverrideReferenceName": "",
+    "m_OverrideReferenceName": "_scale",
     "m_GeneratePropertyBlock": true,
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
-    "m_Value": 13.109999656677246,
+    "m_Value": 5.0,
     "m_FloatType": 0,
     "m_RangeValues": {
         "x": 0.0,
@@ -1009,10 +1009,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1510.939208984375,
-            "y": 136.060791015625,
-            "width": 126.0,
-            "height": 77.0
+            "x": -1492.0,
+            "y": 138.0,
+            "width": 108.0,
+            "height": 34.0
         }
     },
     "m_Slots": [
@@ -1122,13 +1122,13 @@
     },
     "m_Name": "speed",
     "m_DefaultReferenceName": "Vector1_85274e28aaa943b296e7ce304d3e9742",
-    "m_OverrideReferenceName": "",
+    "m_OverrideReferenceName": "_speed",
     "m_GeneratePropertyBlock": true,
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
-    "m_Value": 0.4000000059604645,
+    "m_Value": 1.0,
     "m_FloatType": 0,
     "m_RangeValues": {
         "x": 0.0,

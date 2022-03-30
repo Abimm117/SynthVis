@@ -6,15 +6,62 @@ using System.IO;
 public class SynthVisualizer : MonoBehaviour
 {
     #region define objects
+
+    // time
+    float timeT = 0f;
+    float nextTime = 0.1f;   
+
+    // sound objects
+    public GameObject Sound0Object;   
+    public GameObject Sound1Object;
+    public GameObject Sound2Object;
+    public GameObject Sound3Object;
+    GameObject[] soundObjects;
+    Material sound0material;
+    Material sound1material;
+    Material sound2material;
+    Material sound3material;
+    Material[] soundMaterials;
+
+    // sound data
     public SynthController synthController;
+    float[] currentSynthValArray;
+    bool isPlaying = false;
+    public GetSpectrumData spec1;
+    public GetSpectrumData spec2;
+    public GetSpectrumData spec3;
+    public GetSpectrumData spec4;
+    public GetSpectrumData spec5;
+    public GetSpectrumData spec6;
+    public GetSpectrumData spec7;
+    public GetSpectrumData spec8;
+    GetSpectrumData[] spectra;
+    List<float> currentSpectrumData;
+    float currentSpectrumGiniCoeff;
+    float currentSpectrumMaxFreqIndex;
+    float currentSpectrumWidth;
+    float currentVolume;
+    int nSpectrum = 550;
 
-    // custom synth object
-    public GameObject sphereInstrument0;
-    Material sphere0mat;
-    public GameObject sphereInstrument1;
-    public GameObject sphereInstrument2;
-    public GameObject sphereInstrument3;
+    // auxiliary plots
+    public GameObject oscPlotZoomIn;
+    public GameObject oscPlotZoomOut;
+    public GameObject spectrogram;
+    public GameObject plotPointPrefab;
+    int numPlotPoints = 550;
+    List<GameObject> points = new List<GameObject>();
+    List<GameObject> points1 = new List<GameObject>();
+    List<GameObject> points2 = new List<GameObject>();
+    float xmin = -5.75f;
+    float xmax = 4.25f;
+    float ymin = -3f;
+    float ymax = 3f;
+    public bool refreshVisuals = true;
+    public float plotRefreshSpeed = 0.1f;
 
+
+
+    /*
     public GameObject SynthSoundObjects0Parent;
     public GameObject SynthSoundObjects1Parent;
     public GameObject SynthSoundObjects2Parent;
@@ -31,47 +78,7 @@ public class SynthVisualizer : MonoBehaviour
     float currentSynthSoundObjectNoise;
     int synthSoundObjectTypeCounter = 0;
     string currentSynthSoundObjectName = "";
-    float[] currentSynthValArray;
-    bool isPlaying = false;
-
-    // plot
-    public GameObject oscPlotZoomIn;
-    public GameObject oscPlotZoomOut;
-    public GameObject spectrogram;
-    public GameObject plotPointPrefab;
-    int numPlotPoints = 550;
-    List<GameObject> points = new List<GameObject>();
-    List<GameObject> points1 = new List<GameObject>();
-    List<GameObject> points2 = new List<GameObject>();
-    float xmin = -5.75f;
-    float xmax = 4.25f;
-    float ymin = -3f;
-    float ymax = 3f;
-    public bool refreshVisuals = true;
-    public float plotRefreshSpeed = 0.1f;
-
-    //vowels
-    List<float> ahy = new List<float>();
-    List<float> eey = new List<float>();
-    List<float> ooy = new List<float>();
-    string nearestVowel;
-
-    //spectra
-    public GetSpectrumData spec1;
-    public GetSpectrumData spec2;
-    public GetSpectrumData spec3;
-    public GetSpectrumData spec4;
-    public GetSpectrumData spec5;
-    public GetSpectrumData spec6;
-    public GetSpectrumData spec7;
-    public GetSpectrumData spec8;
-    GetSpectrumData[] spectra;
-    List<float> currentSpectrumData;
-    float currentSpectrumGiniCoeff;
-    int nSpectrum = 550;
-
-    float timeT = 0f;
-    float nextTime = 0.1f;
+    */
     #endregion
 
     private void Awake()
@@ -109,8 +116,8 @@ public class SynthVisualizer : MonoBehaviour
             go.transform.localScale = .05f * Vector3.one;
         }
         spectra = new GetSpectrumData[] { spec1, spec2, spec3, spec4, spec5, spec6, spec7, spec8 };
-        soundObjectsParents = new GameObject[] { SynthSoundObjects0Parent, SynthSoundObjects1Parent, SynthSoundObjects2Parent, SynthSoundObjects3Parent };
-        LoadVowels();
+        //soundObjectsParents = new GameObject[] { SynthSoundObjects0Parent, SynthSoundObjects1Parent, SynthSoundObjects2Parent, SynthSoundObjects3Parent };
+        //LoadVowels();
 
         currentSpectrumData = new List<float>();
         for (int n = 0; n < 550; n++)
@@ -118,14 +125,20 @@ public class SynthVisualizer : MonoBehaviour
             currentSpectrumData.Add(0f);
         }
 
-        sphere0mat = sphereInstrument0.transform.GetComponent<MeshRenderer>().material;
+        sound0material = Sound0Object.transform.GetComponent<Renderer>().sharedMaterial;
+        sound1material = Sound1Object.transform.GetComponent<Renderer>().sharedMaterial;
+        sound2material = Sound2Object.transform.GetComponent<Renderer>().sharedMaterial;
+        sound3material = Sound3Object.transform.GetComponent<Renderer>().sharedMaterial;
+        soundObjects = new GameObject[] { Sound0Object, Sound1Object, Sound2Object, Sound3Object };
+        soundMaterials = new Material[] { sound0material, sound1material, sound2material, sound3material };
     }
 
     // Start is called before the first frame update
     void Start()
     {
         StartCoroutine(DelayStartRefreshVisuals());
-        StartCoroutine(SwitchTempObjectType());   
+        //StartCoroutine(SwitchTempObjectType());
+        Debug.Log("Start noise scale " + sound0material.GetFloat("_scale").ToString());
     }
 
     private void Update()
@@ -137,15 +150,26 @@ public class SynthVisualizer : MonoBehaviour
 
             if (isPlaying)
             {
-                sphereInstrument0.SetActive(true);
-                float noiseLevel = 200f * (1f - currentSpectrumGiniCoeff);
-                Debug.Log("noise " + noiseLevel);
-                sphere0mat.SetFloat("scale", noiseLevel);
-                Debug.Log("new noise val" + sphere0mat.GetFloat("scale"));
+                int n = synthController.CurrentInstrumentNumber();
+                soundObjects[n].SetActive(true);
+
+                // update sound noise
+                float noiseLevel = 50f * (1f - currentSpectrumGiniCoeff);
+                //Debug.Log("noise " + noiseLevel);
+                soundMaterials[n].SetFloat("_scale", noiseLevel);
+                //Debug.Log("new noise val" + sphere0mat.GetFloat("_scale"));
+
+                //TODO:
+
+                //update sound left/right position based on pitch (hopefully the location of the maximum in the spectrogram)
+
+                //update sound height based on volume
+
+                //update sound width based on the left/right spread of the spectrogram
             }
             else
             {
-                sphereInstrument0.SetActive(false);
+                Sound0Object.SetActive(false);
             }
         }
     }
@@ -190,7 +214,9 @@ public class SynthVisualizer : MonoBehaviour
             currentSpectrumData.Add(specVal);
         }
         sortedSpectrumList.Sort();
-               
+        
+        
+        //calculate gini coefficient
         for (int i = 0; i < nSpectrum; i++)
         {
             sum0 += (nSpectrum - i) * sortedSpectrumList[i];
@@ -198,18 +224,14 @@ public class SynthVisualizer : MonoBehaviour
         }
         currentSpectrumGiniCoeff = (1f / nSpectrum) * (nSpectrum + 1 - 2 * (sum0 / sum1));
 
-        //determine the nearest vowel based on currentSpectrumData
-        nearestVowel = GetNearestVowel();
-
         if (refreshVisuals)
         {
-            RefreshPlot();
-            //RefreshSynthSoundObject();
+            RefreshAuxPlots();
         }
         StartCoroutine(RefreshVisuals());
     }
 
-    void RefreshPlot()
+    void RefreshAuxPlots()
     {
         currentSynthValArray = new float[points.Count];
         isPlaying = false;
@@ -268,26 +290,12 @@ public class SynthVisualizer : MonoBehaviour
         }
     }
 
+    #region old code using pre-generated blender objects
+    /*
     void RefreshSynthSoundObject()
     {
-        if (isPlaying)
-        {
-            sphereInstrument0.SetActive(true);
-            float noiseLevel = 5f * (1f - currentSpectrumGiniCoeff);
-            Debug.Log("noise" + noiseLevel.ToString());
-            Material mat = sphereInstrument0.GetComponent<MeshRenderer>().material;
-            Debug.Log(mat.name);
-            mat.SetFloat("_scale", noiseLevel);
-            float newnoise = mat.GetFloat("_scale");
-            Debug.Log(newnoise);
-            Debug.Log("~~~~~~~~~");
-        }
-        else
-        {
-            sphereInstrument0.SetActive(false);
-        }
         #region using pre-generated blender objects
-        /*
+        
         if (isPlaying)
         {
             string _name = GetSynthSoundObjectName();
@@ -313,7 +321,7 @@ public class SynthVisualizer : MonoBehaviour
                 currentSynthSoundObjectName = "";
             }
         }
-        */
+        
         #endregion
     }
 
@@ -332,69 +340,17 @@ public class SynthVisualizer : MonoBehaviour
 
     int GetSynthSoundObjectHeight()
     {
-        return currentSynthSoundObjectHeight;
-        /*
-        if (nearestVowel == "ah")
-        {
-            return 5;
-        }
-        else if (nearestVowel == "ee")
-        {
-            return 3;
-        }
-        else if (nearestVowel == "oo")
-        {
-            return 1;
-        }
-        else
-        {
-            return currentSynthSoundObjectHeight;
-        }
-        */
+        return currentSynthSoundObjectHeight;        
     }
 
     int GetSynthSoundObjectWidth()
     {
         return currentSynthSoundObjectWidth;
-        /*
-        if (nearestVowel == "ah")
-        {
-            return 0;
-        }
-        else if (nearestVowel == "ee")
-        {
-            return 1;
-        }
-        else if (nearestVowel == "oo")
-        {
-            return -1;
-        }
-        else
-        {
-            return currentSynthSoundObjectWidth;
-        }*/
     }
 
     float GetSynthSoundObjectNoise()
     {
         return currentSynthSoundObjectNoise;
-        /*
-        if (nearestVowel == "ah")
-        {
-            return 0.5f;
-        }
-        else if (nearestVowel == "ee")
-        {
-            return 0.25f;
-        }
-        else if (nearestVowel == "oo")
-        {
-            return 1f;
-        }
-        else
-        {
-            return currentSynthSoundObjectNoise;
-        }*/
     }
 
     IEnumerator SwitchTempObjectType()
@@ -413,29 +369,7 @@ public class SynthVisualizer : MonoBehaviour
         StartCoroutine(SwitchTempObjectType());
     }
 
-    string GetNearestVowel()
-    {
-        float ah_mse = MSE(ahy, currentSpectrumData);
-        float ee_mse = MSE(eey, currentSpectrumData);
-        float oo_mse = MSE(ooy, currentSpectrumData);
-
-        if (ah_mse < ee_mse && ah_mse < oo_mse)
-        {
-            return "ah";
-        }
-        else if (ee_mse < ah_mse && ee_mse < oo_mse)
-        {
-            return "ee";
-        }
-        else if (oo_mse < ah_mse && oo_mse < ee_mse)
-        {
-            return "oo";
-        }
-        else
-        {
-            return "none";
-        }
-    }
+   
 
     void LoadHistogram(string filename, ref List<float> ylist)
     {
@@ -456,13 +390,6 @@ public class SynthVisualizer : MonoBehaviour
         }
     }
 
-    void LoadVowels()
-    {
-        LoadHistogram("Assets/vowels/ah_interp.csv", ref ahy);
-        LoadHistogram("Assets/vowels/ee_interp.csv", ref eey);
-        LoadHistogram("Assets/vowels/oo_interp.csv", ref ooy);
-    }
-
     float MSE(List<float> l1, List<float> l2)
     {
         float total = 0;
@@ -473,4 +400,6 @@ public class SynthVisualizer : MonoBehaviour
         }
         return total;
     }
+    */
+    #endregion
 }
