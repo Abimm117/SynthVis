@@ -30,6 +30,7 @@ public class SynthController : MonoBehaviour
     public float volume = .07f;
 
     MusicTheory mt = new MusicTheory();
+    float currentNotePosition = 0f;
 
     public Material whiteKey;
     public Material blackKey;
@@ -215,4 +216,5 @@ public class SynthController : MonoBehaviour
     {
         return InstrumentNumber;
     }
+
 }

@@ -22,6 +22,11 @@ public class GetSpectrumData : MonoBehaviour
         return publicSpectrum;
     }
 
+    public float[] GetFullSpectrum()
+    {
+        return spectrum;
+    }
+
     IEnumerator UpdateSpectrumData()
     {
         yield return new WaitForSeconds(.1f);

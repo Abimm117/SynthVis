@@ -10,6 +10,7 @@ public class AudioRecordingController : MonoBehaviour
     int numOscillators = 8;
     Oscillator[] osc = new Oscillator[8];
     AudioSource[] audioSource = new AudioSource[8];
+    AudioSource[] tracks = new AudioSource[4];
 
     public AudioSource metronomeAudio;
     public bool metronomeOn;
@@ -31,6 +32,11 @@ public class AudioRecordingController : MonoBehaviour
         {
             osc[i] = sounds[i].transform.GetComponent<Oscillator>();
             audioSource[i] = sounds[i].transform.GetComponent<AudioSource>();
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            tracks[i] = transform.Find("Track" + i.ToString()).GetComponent<AudioSource>();
         }
     }
 
@@ -54,50 +60,66 @@ public class AudioRecordingController : MonoBehaviour
                 // initial metronome
                 metronomeOn = true;
                 Debug.Log("almost recording...");
-                
+                recordedDataList = new List<float>();
+
+
             }
             else if ((beatNum > startRecordingBeatNum + 5) && (beatNum < startRecordingBeatNum + 13) && (prerecording || recording))
             {
+                Debug.Log("Turn buffers on");
                 for (int i = 0; i < numOscillators; i++)
                 {
                     osc[i].storeDataInBuffer = true;
                 }
+                Debug.Log("buffer on ok");
 
                 prerecording = false;
                 recording = true;
-                int maxlength = 100000000;
-                // recording ongoing
                 Debug.Log("recording");
-
-                for (int k = 0; k < maxlength; k++)
+                int k = 0;
+                bool running = true;
+                Debug.Log("starting while loop");
+                while (running)
                 {
                     for (int j = 0; j < numOscillators; j++)
                     {
                         if (k == osc[j].floatBuffer.Count)
                         {
-                            break;
+                            running = false;
                         }
                     }
-
-                    for (int i = 0; i < numOscillators; i++)
-                    {                       
-                        recordedDataList.Add(osc[i].floatBuffer[k]);
+                    if (running)
+                    {
+                        for (int j = 0; j < numOscillators; j++)
+                        {
+                            float sum = 0f;
+                            for (int i = 0; i < numOscillators; i++)
+                            {
+                                sum += osc[i].floatBuffer[k];
+                            }
+                            recordedDataList.Add(sum);
+                        }
                     }                   
+                    k++;
                 }
-                    
+                Debug.Log("while loop ok");
+                Debug.Log("clearing buffers");
+                for (int i = 0; i < numOscillators; i++)
+                {
+                    osc[i].ClearBuffer();
+                }
+                Debug.Log("clear buffer ok");
             }
             else if (recording)
             {
                 recording = false;
 
-                // end recording
+                // assign recording as the track clip
                 Debug.Log("done recording");
-                AudioClip clip = AudioClip.Create("Track" + recordingTrackNum.ToString() + " clip", recordedDataList.Count, numOscillators, 44100, false);
+                AudioClip clip = AudioClip.Create("Track" + recordingTrackNum.ToString() + " clip", recordedDataList.Count, 1, 44100, false);
                 recordedData = recordedDataList.ToArray();
                 clip.SetData(recordedData, 0);
-
-                AudioSource src = transform.Find("Track" + recordingTrackNum.ToString()).GetComponent<AudioSource>();
-                src.clip = clip;
+                tracks[recordingTrackNum].clip = clip;
 
                 // stop metronome
                 metronomeOn = false;
@@ -140,7 +162,7 @@ public class AudioRecordingController : MonoBehaviour
         StopTrack(tracknum);
         Debug.Log("play track" + tracknum.ToString());
         // play the currently stored track or do nothing
-        transform.Find("Track" + tracknum.ToString()).GetComponent<AudioSource>().Play();
+        tracks[tracknum].Play();
     }
 
     public void StopTrack(int tracknum)
@@ -148,6 +170,6 @@ public class AudioRecordingController : MonoBehaviour
         Debug.Log("stop track" + tracknum.ToString());
         // stop the currently playing track or do nothing
 
-        transform.Find("Track" + tracknum.ToString()).GetComponent<AudioSource>().Stop();
+        tracks[tracknum].Stop();
     }
 }

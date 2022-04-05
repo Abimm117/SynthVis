@@ -1297,41 +1297,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 163356046}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &176994818
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 176994819}
-  m_Layer: 0
-  m_Name: Sounds
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &176994819
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 176994818}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.6936204, y: 8.23, z: -7.98}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 1238916456}
-  - {fileID: 1507195114}
-  - {fileID: 1083995407}
-  - {fileID: 1235653408}
-  - {fileID: 1940554028}
-  m_Father: {fileID: 2042851540}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &182137804
 GameObject:
   m_ObjectHideFlags: 0
@@ -6299,7 +6264,7 @@ GameObject:
   - component: {fileID: 1083995409}
   - component: {fileID: 1083995408}
   m_Layer: 0
-  m_Name: Sphere2
+  m_Name: Sound2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6312,12 +6277,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1083995406}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -7.62, y: -2.5919662, z: 1.863688}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0.6272446, y: -0.20072533, z: 0.12789631, w: 0.74156326}
+  m_LocalPosition: {x: -2.1511, y: -1.3702, z: -0.43673}
+  m_LocalScale: {x: 1.0763278, y: 0.74687546, z: 1.1308403}
   m_Children: []
-  m_Father: {fileID: 176994819}
-  m_RootOrder: 2
+  m_Father: {fileID: 1940554028}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!135 &1083995408
 SphereCollider:
@@ -6818,7 +6783,7 @@ GameObject:
   - component: {fileID: 1235653410}
   - component: {fileID: 1235653409}
   m_Layer: 0
-  m_Name: Sphere3
+  m_Name: Sound3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6831,12 +6796,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1235653407}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.9215348, y: -2.5919662, z: -1.8}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0.6272446, y: -0.20072533, z: 0.12789631, w: 0.74156326}
+  m_LocalPosition: {x: 2.4984, y: -4.0039, z: -0.56915}
+  m_LocalScale: {x: 1.0763278, y: 0.74687546, z: 1.1308403}
   m_Children: []
-  m_Father: {fileID: 176994819}
-  m_RootOrder: 3
+  m_Father: {fileID: 1940554028}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!135 &1235653409
 SphereCollider:
@@ -6913,7 +6878,7 @@ GameObject:
   - component: {fileID: 1238916454}
   - component: {fileID: 1238916453}
   m_Layer: 0
-  m_Name: Sphere0
+  m_Name: Sound0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6988,12 +6953,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1238916452}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.9215348, y: -2.5919662, z: 4.16}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0.6272446, y: -0.20072533, z: 0.12789631, w: 0.74156326}
+  m_LocalPosition: {x: -3.2988, y: 4.8536, z: -0.52501}
+  m_LocalScale: {x: 1.0763278, y: 0.74687546, z: 1.1308403}
   m_Children: []
-  m_Father: {fileID: 176994819}
-  m_RootOrder: 0
+  m_Father: {fileID: 1940554028}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1307900769
 GameObject:
@@ -8042,7 +8007,7 @@ GameObject:
   - component: {fileID: 1507195116}
   - component: {fileID: 1507195115}
   m_Layer: 0
-  m_Name: Sphere1
+  m_Name: Sound1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8055,12 +8020,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1507195113}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.9215348, y: -2.5919662, z: 1.863688}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0.6272446, y: -0.20072533, z: 0.12789631, w: 0.74156326}
+  m_LocalPosition: {x: 0.12948, y: 1.1605, z: -0.46616}
+  m_LocalScale: {x: 1.0763278, y: 0.74687546, z: 1.1308403}
   m_Children: []
-  m_Father: {fileID: 176994819}
-  m_RootOrder: 1
+  m_Father: {fileID: 1940554028}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!135 &1507195115
 SphereCollider:
@@ -10371,12 +10336,16 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1940554027}
   m_LocalRotation: {x: 0.6272446, y: 0.20072533, z: -0.12789631, w: 0.74156326}
-  m_LocalPosition: {x: -4.32298, y: -3.7465801, z: 1.4312344}
-  m_LocalScale: {x: 1.0282742, y: 0.94411814, z: 1.4903206}
+  m_LocalPosition: {x: -6.0166006, y: 4.48342, z: -6.548765}
+  m_LocalScale: {x: 1.0282742, y: 0.9441182, z: 1.4903203}
   m_Children:
   - {fileID: 1162846349}
-  m_Father: {fileID: 176994819}
-  m_RootOrder: 4
+  - {fileID: 1238916456}
+  - {fileID: 1507195114}
+  - {fileID: 1083995407}
+  - {fileID: 1235653408}
+  m_Father: {fileID: 2042851540}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 79, y: 46, z: 19}
 --- !u!1 &1952884631
 GameObject:
@@ -10820,19 +10789,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 540b75eadbcc29b4b8c411bfdee1f60c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  soundObjectUpdateTime: 0
   Sound0Object: {fileID: 1238916452}
   Sound1Object: {fileID: 1507195113}
   Sound2Object: {fileID: 1083995406}
   Sound3Object: {fileID: 1235653407}
+  noiseMultiplier: 100
+  leftRightMultiplier: 128
+  objectLerpSpeed: 5
   synthController: {fileID: 383454793}
-  spec1: {fileID: 684625538}
-  spec2: {fileID: 1539050738}
-  spec3: {fileID: 1762448856}
-  spec4: {fileID: 756976995}
-  spec5: {fileID: 487549300}
-  spec6: {fileID: 972883560}
-  spec7: {fileID: 1085630610}
-  spec8: {fileID: 900353700}
+  spectra:
+  - {fileID: 684625538}
+  - {fileID: 1539050738}
+  - {fileID: 1762448856}
+  - {fileID: 756976995}
+  - {fileID: 487549300}
+  - {fileID: 972883560}
+  - {fileID: 1085630610}
+  - {fileID: 900353700}
   oscPlotZoomIn: {fileID: 1952884631}
   oscPlotZoomOut: {fileID: 203075590}
   spectrogram: {fileID: 807514255}
@@ -10850,7 +10824,7 @@ Transform:
   m_LocalPosition: {x: 2.4151552, y: 4.4319663, z: -5.1536884}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 176994819}
+  - {fileID: 1940554028}
   - {fileID: 70818828}
   m_Father: {fileID: 0}
   m_RootOrder: 3
