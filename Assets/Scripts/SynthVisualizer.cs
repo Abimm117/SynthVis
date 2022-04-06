@@ -13,11 +13,10 @@ public class SynthVisualizer : MonoBehaviour
 
     // sound objects
     public float soundObjectUpdateTime;
-    public GameObject Sound0Object;   
-    public GameObject Sound1Object;
-    public GameObject Sound2Object;
-    public GameObject Sound3Object;
+    public GameObject Sound0Object, Sound1Object, Sound2Object, Sound3Object;
+    public GameObject Sound0Marker, Sound1Marker, Sound2Marker, Sound3Marker;
     GameObject[] soundObjects;
+    GameObject[] soundMarkers;
     Material sound0material;
     Material sound1material;
     Material sound2material;
@@ -33,14 +32,6 @@ public class SynthVisualizer : MonoBehaviour
     public SynthController synthController;
     float[] currentSynthValArray;
     bool isPlaying = false;
-    //public GetSpectrumData spec1;
-    //public GetSpectrumData spec2;
-    //public GetSpectrumData spec3;
-    //public GetSpectrumData spec4;
-    //public GetSpectrumData spec5;
-    //public GetSpectrumData spec6;
-    //public GetSpectrumData spec7;
-    //public GetSpectrumData spec8;
     public GetSpectrumData[] spectra;
     List<float> currentSpectrumData;
     List<float> currentFullSpectrumData;
@@ -48,14 +39,14 @@ public class SynthVisualizer : MonoBehaviour
     float currentSpectrumMaxFreqIndex;
     float currentSpectrumWidth;
     float currentVolume;
-    int nSpectrum = 550;
+    int nSpectrum = 1000;
 
     // auxiliary plots
     public GameObject oscPlotZoomIn;
     public GameObject oscPlotZoomOut;
     public GameObject spectrogram;
     public GameObject plotPointPrefab;
-    int numPlotPoints = 550;
+    int numPlotPoints = 1000;
     List<GameObject> points = new List<GameObject>();
     List<GameObject> points1 = new List<GameObject>();
     List<GameObject> points2 = new List<GameObject>();
@@ -65,27 +56,6 @@ public class SynthVisualizer : MonoBehaviour
     float ymax = 3f;
     public bool refreshVisuals = true;
     public float plotRefreshSpeed = 0.1f;
-
-
-
-    /*
-    public GameObject SynthSoundObjects0Parent;
-    public GameObject SynthSoundObjects1Parent;
-    public GameObject SynthSoundObjects2Parent;
-    public GameObject SynthSoundObjects3Parent;
-    GameObject[] soundObjectsParents;
-    public int[] heights = new int[] { 1, 3, 5 };
-    public int[] widths = new int[] { -1, 0, 1 };
-    public float[] noises = new float[] { 0f, 0.25f, 0.5f, 0.75f, 1f };
-    int synthSoundObjectHeight;
-    int synthSoundObjectWidth;
-    float synthSoundObjectNoise;
-    int currentSynthSoundObjectHeight;
-    int currentSynthSoundObjectWidth;
-    float currentSynthSoundObjectNoise;
-    int synthSoundObjectTypeCounter = 0;
-    string currentSynthSoundObjectName = "";
-    */
     #endregion
 
     private void Awake()
@@ -125,7 +95,7 @@ public class SynthVisualizer : MonoBehaviour
 
         currentSpectrumData = new List<float>();
         currentFullSpectrumData = new List<float>();
-        for (int n = 0; n < 550; n++)
+        for (int n = 0; n < nSpectrum; n++)
         {
             currentSpectrumData.Add(0f);
         }
@@ -139,6 +109,7 @@ public class SynthVisualizer : MonoBehaviour
         sound2material = Sound2Object.transform.GetComponent<Renderer>().sharedMaterial;
         sound3material = Sound3Object.transform.GetComponent<Renderer>().sharedMaterial;
         soundObjects = new GameObject[] { Sound0Object, Sound1Object, Sound2Object, Sound3Object };
+        soundMarkers = new GameObject[] { Sound0Marker, Sound1Marker, Sound2Marker, Sound3Marker };
         soundMaterials = new Material[] { sound0material, sound1material, sound2material, sound3material };
     }
 
@@ -155,12 +126,14 @@ public class SynthVisualizer : MonoBehaviour
         if (timeT > nextTime)
         {
             nextTime = timeT + soundObjectUpdateTime;
-
+            int n = synthController.CurrentInstrumentNumber();
+            soundMarkers[n].SetActive(true);
             if (isPlaying)
             {
-                int n = synthController.CurrentInstrumentNumber();
+                
                 GameObject go = soundObjects[n];
                 go.SetActive(true);
+                
 
                 //update sound left/right position based on pitch (hopefully the location of the maximum in the spectrogram)
                 // this method is currently glitchy
@@ -168,7 +141,7 @@ public class SynthVisualizer : MonoBehaviour
                 go.transform.localPosition = Vector3.MoveTowards(go.transform.localPosition, new Vector3(target_left_right_pos, go.transform.localPosition.y, go.transform.localPosition.z), objectLerpSpeed * Time.deltaTime);
 
                 // update sound noise
-                float noiseLevel = 50f * (1f - currentSpectrumGiniCoeff);
+                float noiseLevel = Mathf.Pow(50f * (1f - currentSpectrumGiniCoeff), 2);
                 soundMaterials[n].SetFloat("_scale", noiseLevel);
 
                 //TODO:
@@ -186,6 +159,11 @@ public class SynthVisualizer : MonoBehaviour
                 for (int i = 0; i < 4; i++)
                 {
                     soundObjects[i].SetActive(false);
+                    if (i != n)
+                    {
+                        soundMarkers[i].SetActive(false);
+                    }
+                    
                 }                
             }
         }
@@ -327,8 +305,8 @@ public class SynthVisualizer : MonoBehaviour
         for (int n = 0; n < points2.Count; n++)
         {
             GameObject go = points2[n];
-            // map the freq val, which is between 0 and 1, to a height on the backplate 
-            float height = Mathf.Lerp(ymin, ymax, currentSpectrumData[n]);
+            // map the freq val, which is between 0 and 1, to a height on the backplate using a log scale
+            float height = Mathf.Lerp(ymin, ymax, Mathf.Log(1 + currentSpectrumData[n], 2));
             go.transform.localPosition = new Vector3(go.transform.localPosition.x, height, go.transform.localPosition.z);
         }
     }

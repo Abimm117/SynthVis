@@ -17,8 +17,8 @@ public class GetSpectrumData : MonoBehaviour
 
     public float[] GetSpectrum()
     {
-        float[] publicSpectrum = new float[550];
-        Array.Copy(spectrum, publicSpectrum, 550);
+        float[] publicSpectrum = new float[1000];
+        Array.Copy(spectrum, publicSpectrum, 1000);
         return publicSpectrum;
     }
 
