@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using MidiJack;
 
-public enum WaveType { SINE, SQUARE};
-
 public class SynthController : MonoBehaviour
 {
     #region define objects

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum WaveType { SINE, SQUARE, TRIANGLE };
 public class Instrument : MonoBehaviour
 {
     //TODO:
@@ -40,37 +41,35 @@ public class Instrument : MonoBehaviour
     public WaveType wave2type;
     public WaveType wave3type;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public float CustomSynth(float x)
     {
-        float wave1 = wave1Strength * (wave1type == WaveType.SQUARE ? Square(wave1freq * x) : Mathf.Sin(wave1freq * x));
-        float wave2 = wave2Strength * (wave2type == WaveType.SQUARE ? Square(wave2freq * x) : Mathf.Sin(wave2freq * x));
-        float wave3 = wave3Strength * (wave3type == WaveType.SQUARE ? Square(wave3freq * x) : Mathf.Sin(wave3freq * x));
+        float wave1 = 0f;
+        float wave2 = 0f;
+        float wave3 = 0f;
+
+        if (wave1type == WaveType.SINE) { wave1 = wave1Strength * Mathf.Sin(wave1freq * x); }
+        else if (wave1type == WaveType.SQUARE) { wave1 = wave1Strength * Square(wave1freq * x); }
+        else if (wave1type == WaveType.TRIANGLE) { wave1 = wave1Strength * Triangle(wave1freq * x); }
+
+        if (wave2type == WaveType.SINE) { wave2 = wave2Strength * Mathf.Sin(wave2freq * x); }
+        else if (wave2type == WaveType.SQUARE) { wave2 = wave2Strength * Square(wave2freq * x); }
+        else if (wave2type == WaveType.TRIANGLE) { wave2 = wave2Strength * Triangle(wave2freq * x); }
+
+        if (wave3type == WaveType.SINE) { wave3 = wave3Strength * Mathf.Sin(wave3freq * x); }
+        else if (wave3type == WaveType.SQUARE) { wave3 = wave3Strength * Square(wave3freq * x); }
+        else if (wave3type == WaveType.TRIANGLE) { wave3 = wave3Strength * Triangle(wave3freq * x); }
+
         float normalizingConstant = 1f / (3f * (Mathf.Abs(wave1Strength) + Mathf.Abs(wave2Strength) + Mathf.Abs(wave3Strength)));
         return normalizingConstant * (wave1 + wave2 + wave3);
     }
 
     float Square(float phase)
     {
-        float x = Mathf.Sin(phase);
-        if (x > 0.0)
-        {
-            return 1.0f;
-        }
-        else
-        {
-            return -1.0f;
-        }
+        return Mathf.Sin(phase) > 0.0 ? 1.0f : -1.0f;
+    }
+
+    float Triangle(float phase)
+    {
+        return Mathf.Abs((((phase - Mathf.PI/2)/4) % Mathf.PI/2) - Mathf.PI/4) * 8f / Mathf.PI - 1;
     }
 }
