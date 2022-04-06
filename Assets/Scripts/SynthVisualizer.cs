@@ -19,22 +19,27 @@ public class SynthVisualizer : MonoBehaviour
     public GameObject allInstrumentPlot;
     public GameObject singleInstrumentPlot;
 
-    // sound objects
-    public float soundObjectUpdateTime;
-    public GameObject singleSoundObject;
-    Material singleSoundMaterial;
+    // all instrument plot  
     public GameObject[] allSoundObjects;
     public GameObject[] allSoundMarkers;
     Material[] allSoundMaterials;
 
+    // single instrument plot
+    public GameObject singleSoundObject;
+    Material singleSoundMaterial;
+    public TextMeshPro instrumentNumberLabel;
+
     // sound visualization settings
+    public bool refresh = true;
+    public float plotRefreshSpeed = 0.1f;
+    public float soundObjectUpdateTime;
     public float noiseMultiplier;
-    public float leftRightMultiplier;
+    public float frequencyPositionMultiplier;
+    public float frequencyPositionShift;
     public float objectLerpSpeed;
 
     // sound data
     public SynthController synthController;
-    float[] currentSynthValArray;
     bool isPlaying = false;
     public GetSpectrumData[] spectra;
     List<float> currentSpectrumData;
@@ -45,24 +50,23 @@ public class SynthVisualizer : MonoBehaviour
     float currentVolume;
     int nSpectrum = 1000;
 
-    // single instrument plot
-    public TextMeshPro instrumentNumberLabel;
-
     // auxiliary plots
-    public GameObject oscPlotZoomIn;
-    public GameObject oscPlotZoomOut;
+    //public WaveformView waveformView;
+    //public GameObject oscPlotZoomIn;
+    //public GameObject oscPlotZoomOut;
+    public GameObject waveformPlot;
     public GameObject spectrogram;
     public GameObject plotPointPrefab;
+    public float spectrogramHeightShift;
+    public float waveformPlotZoom;
     int numPlotPoints = 1000;
     List<GameObject> points = new List<GameObject>();
-    List<GameObject> points1 = new List<GameObject>();
+    //List<GameObject> points1 = new List<GameObject>();
     List<GameObject> points2 = new List<GameObject>();
     float xmin = -5.75f;
     float xmax = 4.25f;
     float ymin = -3f;
     float ymax = 3f;
-    public bool refresh = true;
-    public float plotRefreshSpeed = 0.1f;
     #endregion
 
     private void Awake()
@@ -70,9 +74,9 @@ public class SynthVisualizer : MonoBehaviour
         #region initialize aux plots
         float xPos = xmin;
         float xStep = (xmax - xmin) / numPlotPoints;
-        GameObject[] auxPlots = new GameObject[] { oscPlotZoomIn, oscPlotZoomOut, spectrogram };
-        List<GameObject>[] pointsLists = new List<GameObject>[] { points, points1, points2 };
-        for (int n = 0; n < 3; n++)
+        GameObject[] auxPlots = new GameObject[] { waveformPlot, spectrogram};//{ oscPlotZoomIn, oscPlotZoomOut, spectrogram };
+        List<GameObject>[] pointsLists = new List<GameObject>[] { points, points2 };
+        for (int n = 0; n < auxPlots.Length; n++)
         {
             for (int i = 0; i < numPlotPoints; i++)
             {
@@ -141,10 +145,11 @@ public class SynthVisualizer : MonoBehaviour
             GameObject go = allSoundObjects[n];
             go.SetActive(true);
 
-            //update sound left/right position based on pitch (currently determined as the location of the maximum in the spectrogram)
+            //update sound position based on pitch (currently determined as the location of the maximum in the spectrogram)
+            // represent this on log scale because human perception of audio is logarithmic
             // this method is currently glitchy
-            float target_left_right_pos = Mathf.Lerp(xmin, xmax, currentSpectrumMaxFreqIndex / leftRightMultiplier);
-            go.transform.localPosition = Vector3.MoveTowards(go.transform.localPosition, new Vector3(target_left_right_pos, go.transform.localPosition.y, go.transform.localPosition.z), objectLerpSpeed * Time.deltaTime);
+            float target_frequency_pos = Mathf.Lerp(xmin, xmax, Mathf.Log(1 + (currentSpectrumMaxFreqIndex * frequencyPositionMultiplier + frequencyPositionShift) / 4096f, 2));
+            go.transform.localPosition = Vector3.MoveTowards(go.transform.localPosition, new Vector3(target_frequency_pos, go.transform.localPosition.y, go.transform.localPosition.z), objectLerpSpeed * Time.deltaTime);
 
             // update sound noise
             float noiseLevel = Mathf.Pow(noiseMultiplier * (1f - currentSpectrumGiniCoeff), 2);
@@ -289,9 +294,7 @@ public class SynthVisualizer : MonoBehaviour
 
     void RefreshAuxPlots()
     {
-        currentSynthValArray = new float[points.Count];
-
-        // first aux plot
+        // waveform plot
         for (int n = 0; n < points.Count; n++)
         {
             GameObject go = points[n];
@@ -302,29 +305,7 @@ public class SynthVisualizer : MonoBehaviour
                 {
                     if (synthController.OscillatorInUse(i))
                     {
-                        synthVal = synthController.CurrentInstrument().CustomSynth(go.transform.localPosition.x);
-                    }
-                }
-            }
-            currentSynthValArray[n] = synthVal;
-
-            // map the synth val, which is between -1 and 1, to a height on the backplate 
-            float height = Mathf.Lerp(ymin, ymax, 0.5f * (synthVal + 1f));
-            go.transform.localPosition = new Vector3(go.transform.localPosition.x, height, go.transform.localPosition.z);
-        }
-
-        // second aux plot: for now, 20 times the frequency of the first one, to see LFO
-        for (int n = 0; n < points1.Count; n++)
-        {
-            GameObject go = points1[n];
-            float synthVal = 0f;
-            if (synthController.NumPlaying() > 0)
-            {
-                for (int i = 0; i < synthController.sounds.Length; i++)
-                {
-                    if (synthController.OscillatorInUse(i))
-                    {
-                        synthVal = synthController.CurrentInstrument().CustomSynth(20 * go.transform.localPosition.x);
+                        synthVal = synthController.CurrentInstrument().CustomSynth(waveformPlotZoom * go.transform.localPosition.x);
                     }
                 }
             }
@@ -334,13 +315,13 @@ public class SynthVisualizer : MonoBehaviour
             go.transform.localPosition = new Vector3(go.transform.localPosition.x, height, go.transform.localPosition.z);
         }
 
-        // third aux plot: showing the current sound's spectrogram data
+        // spectrogram plot
         for (int n = 0; n < points2.Count; n++)
         {
             GameObject go = points2[n];
             // map the freq val, which is between 0 and 1, to a height on the backplate using a log scale
             float height = Mathf.Lerp(ymin, ymax, Mathf.Log(1 + currentSpectrumData[n], 2));
-            go.transform.localPosition = new Vector3(go.transform.localPosition.x, height, go.transform.localPosition.z);
+            go.transform.localPosition = new Vector3(go.transform.localPosition.x, height + spectrogramHeightShift, go.transform.localPosition.z);
         }
     }
 }
