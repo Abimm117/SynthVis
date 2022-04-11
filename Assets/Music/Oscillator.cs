@@ -35,12 +35,12 @@ public class Oscillator : MonoBehaviour
         idNum = i;
     }
 
-    public void SetEnvelope(Instrument i)
+    public void SetEnvelope(Instrument inst)
     {
-        env.attackTime = i.attack;
-        env.decayTime = i.decay;
-        env.sustainAmplitude = i.sustain;
-        env.releaseTime = i.release;
+        env.attackTime = inst.attack;
+        env.decayTime = inst.decay;
+        env.sustainAmplitude = inst.sustain;
+        env.releaseTime = inst.release;
     }
 
     public void PlayNote(Note n)

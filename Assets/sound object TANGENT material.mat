@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: sound object material
-  m_Shader: {fileID: -6465566751694194690, guid: 868e41d8a07f51a4680b8aeaea7c7b9d, type: 3}
+  m_Name: sound object TANGENT material
+  m_Shader: {fileID: -6465566751694194690, guid: 82aea3d2c1d3fa74cae8cc95f718afb9, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -32,9 +32,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - Vector1_5b94fbb7071b4505837f549d4c9a5b61: 5
-    - Vector1_85274e28aaa943b296e7ce304d3e9742: 1
-    - _scale: 0.96655816
-    - _speed: 0.5
+    - _scale: 0.22361831
+    - _speed: 0.1
     m_Colors: []
   m_BuildTextureStacks: []

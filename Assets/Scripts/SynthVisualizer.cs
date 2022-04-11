@@ -6,6 +6,8 @@ using TMPro;
 
 public enum VisualizationMode { SingleInstrument, AllInstruments}
 
+public enum VertexShaderMode { Object, World, Tangent};
+
 public class SynthVisualizer : MonoBehaviour
 {
     #region define objects
@@ -26,7 +28,15 @@ public class SynthVisualizer : MonoBehaviour
     Material[] allSoundMaterials;
 
     // single instrument plot
+    public VertexShaderMode vertexMode;
+    VertexShaderMode savedVertexMode;
     public GameObject singleSoundObject;
+    Vector3 savedObjectscale;
+    Vector3 savedWorldscale;
+    Vector3 savedTangentscale;
+    public GameObject singleSoundObjectWorld;
+    public GameObject singleSoundObjectTangent;
+    GameObject singleSound;
     Vector3 savedObjectScaleSingle;
     Material singleSoundMaterial;
     public TextMeshPro instrumentNumberLabel;
@@ -70,12 +80,36 @@ public class SynthVisualizer : MonoBehaviour
 
     #endregion
 
+    void LoadSingleSoundObject()
+    {
+        singleSoundObject.SetActive(false);
+        singleSoundObjectWorld.SetActive(false);
+        singleSoundObjectTangent.SetActive(false);
+        if (vertexMode == VertexShaderMode.Object)
+        {
+            singleSound = singleSoundObject;
+            savedObjectScaleSingle = savedObjectscale;
+        }
+        else if (vertexMode == VertexShaderMode.World)
+        {
+            singleSound = singleSoundObjectWorld;
+            savedObjectScaleSingle = savedWorldscale;
+        }
+        else if (vertexMode == VertexShaderMode.Tangent)
+        {
+            singleSound = singleSoundObjectTangent;
+            savedObjectScaleSingle = savedTangentscale;
+        }
+        singleSoundMaterial = singleSound.transform.GetComponent<Renderer>().sharedMaterial;
+        //savedObjectScaleSingle = singleSound.transform.localScale;
+    }
+
     private void Awake()
     {
         #region initialize aux plots
         float xPos = xmin;
         float xStep = (xmax - xmin) / numPlotPoints;
-        GameObject[] auxPlots = new GameObject[] { waveformPlot, spectrogram};//{ oscPlotZoomIn, oscPlotZoomOut, spectrogram };
+        GameObject[] auxPlots = new GameObject[] { waveformPlot, spectrogram};
         List<GameObject>[] pointsLists = new List<GameObject>[] { points, points2 };
         for (int n = 0; n < auxPlots.Length; n++)
         {
@@ -105,15 +139,17 @@ public class SynthVisualizer : MonoBehaviour
         #endregion
 
         #region load materials
-        singleSoundMaterial = singleSoundObject.transform.GetComponent<Renderer>().sharedMaterial;
+        savedObjectscale = singleSoundObject.transform.localScale;
+        savedWorldscale = singleSoundObjectWorld.transform.localScale;
+        savedTangentscale = singleSoundObjectTangent.transform.localScale;
+        LoadSingleSoundObject();
         allSoundMaterials = new Material[allSoundObjects.Length];
         for (int i = 0; i < 4; i++)
         {
             allSoundMaterials[i] = allSoundObjects[i].transform.GetComponent<Renderer>().sharedMaterial;
         }
 
-        savedObjectScaleAll = allSoundObjects[0].transform.localScale;
-        savedObjectScaleSingle = singleSoundObject.transform.localScale;
+        savedObjectScaleAll = allSoundObjects[0].transform.localScale;        
         #endregion
     }
 
@@ -125,6 +161,7 @@ public class SynthVisualizer : MonoBehaviour
         int nSamplePerWave = Mathf.RoundToInt(bufferLength / (446.16f / (sampleRate / bufferLength)));
         frequencyHz = makeArr(0, 32*nSamplePerWave, nSpectrum);
         StartCoroutine(Refresh());
+        savedVertexMode = vertexMode;
     }
 
     private void Update()
@@ -140,7 +177,12 @@ public class SynthVisualizer : MonoBehaviour
             else if (mode == VisualizationMode.SingleInstrument)
             {
                 UpdateSingleInstrumentPlot();
-            }           
+            }     
+            if (vertexMode != savedVertexMode)
+            {
+                LoadSingleSoundObject();
+                savedVertexMode = vertexMode;
+            }
         }
     }
 
@@ -163,12 +205,12 @@ public class SynthVisualizer : MonoBehaviour
 
             // update sound noise
             float noiseLevel = Mathf.Pow(noiseMultiplier * (1f - currentSpectrumGiniCoeff), 2);
-            allSoundMaterials[n].SetFloat("_scale", noiseLevel);
-
-            //TODO:
+            allSoundMaterials[n].SetFloat("_scale", noiseLevel);          
 
             //update sound size based on volume & envelope
             go.transform.localScale = envVal * savedObjectScaleAll;
+
+            //TODO:
 
             //update sound stretch based on the currentSpectrumSpread of the spectrogram
         }
@@ -194,31 +236,36 @@ public class SynthVisualizer : MonoBehaviour
     {
         int n = synthController.CurrentInstrumentNumber();
         instrumentNumberLabel.SetText("Inst #" + (n+1).ToString());
-        float envVal = (float)synthController.CurrentEnvelopeValue() + .0001f;
+        float envVal = (float)synthController.CurrentEnvelopeValue();
 
         if (isPlaying)
         {
-            singleSoundObject.SetActive(true);
+            singleSound.SetActive(true);
+            
+
+            //float target_noise = Mathf.Lerp(xmin, xmax, Mathf.Log(1 + (currentSpectrumCentroid * frequencyPositionMultiplier + frequencyPositionShift) / 4096f, 2));
+            //go.transform.localPosition = Vector3.MoveTowards(go.transform.localPosition, new Vector3(target_frequency_pos, go.transform.localPosition.y, go.transform.localPosition.z), objectLerpSpeed * Time.deltaTime);
+
 
             // update sound noise
             float noiseLevel = Mathf.Pow(noiseMultiplier * (1f - currentSpectrumGiniCoeff), 2);
-            singleSoundMaterial.SetFloat("_scale", noiseLevel);
-
-            //TODO:
+            singleSoundMaterial.SetFloat("_scale", noiseLevel);            
 
             //update sound size based on volume & envelope
             
-            singleSoundObject.transform.localScale = envVal * savedObjectScaleSingle;
+            singleSound.transform.localScale = envVal * savedObjectScaleSingle;
+
+            //TODO:
 
             //update sound stretch based on the left/right spread of the spectrogram
         }
-        else if (envVal > .00001f)
+        else if (envVal > .01f)
         {
-            singleSoundObject.transform.localScale = envVal * savedObjectScaleSingle;
+            singleSound.transform.localScale = envVal * savedObjectScaleSingle;
         }
         else
         {
-            singleSoundObject.SetActive(false);
+            singleSound.SetActive(false);
         }
     }
 

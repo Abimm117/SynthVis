@@ -25,7 +25,7 @@ public class SynthController : MonoBehaviour
     Instrument[] instruments;
     public int InstrumentNumber = 0;
 
-    public double[] currentEnvelopeValues = new double[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+    double[] currentEnvelopeValues = new double[] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
     public float volume = .07f;
 
@@ -61,6 +61,19 @@ public class SynthController : MonoBehaviour
         foreach (int i in mt.midiKeyNumbers)
         {
             midi_keyPlaying[i] = false;
+        }
+    }
+    void Update()
+    {
+        CheckForComputerKeyboardAction();
+        CheckForMidiKeyboardAction();
+    }
+
+    private void OnDestroy()
+    {
+        for (int i = 0; i < numOscillators; i++)
+        {
+            audioSource[i].Stop();
         }
     }
 
@@ -128,21 +141,6 @@ public class SynthController : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         ReleaseOscillatorFromNote(noteName);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        CheckForComputerKeyboardAction();
-        CheckForMidiKeyboardAction();
-    }
-
-    private void OnDestroy()
-    {
-        for (int i = 0; i < numOscillators; i++)
-        {
-            audioSource[i].Stop();
-        }
     }
 
     void CheckForComputerKeyboardAction()
