@@ -2952,6 +2952,15 @@ MonoBehaviour:
   instrument2: {fileID: 383454795}
   instrument3: {fileID: 383454794}
   InstrumentNumber: 0
+  currentEnvelopeValues:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
   volume: 0.2
   whiteKey: {fileID: 2100000, guid: 1fbb720362a2c5645963ef4c6caae572, type: 2}
   blackKey: {fileID: 2100000, guid: 6009c2f69e189e049ba050e5d35775dd, type: 2}
@@ -11885,7 +11894,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1927658395
 Transform:
   m_ObjectHideFlags: 0
@@ -11919,7 +11928,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1940554028
 Transform:
   m_ObjectHideFlags: 0
@@ -12405,8 +12414,8 @@ MonoBehaviour:
   refresh: 1
   plotRefreshSpeed: 0.1
   soundObjectUpdateTime: 0.05
-  noiseMultiplier: 50
-  frequencyPositionMultiplier: 30
+  noiseMultiplier: 200
+  frequencyPositionMultiplier: 10000
   frequencyPositionShift: 1
   objectLerpSpeed: 30
   synthController: {fileID: 383454793}
@@ -12419,11 +12428,16 @@ MonoBehaviour:
   - {fileID: 972883560}
   - {fileID: 1085630610}
   - {fileID: 900353700}
+  currentSpectrumGiniCoeff: 0
+  currentSpectrumCentroid: 0
+  currentSpectrumSpread: 0
+  currentSpectrumFlatness: 0
   waveformPlot: {fileID: 1952884631}
   spectrogram: {fileID: 807514255}
   plotPointPrefab: {fileID: 3644319501268584781, guid: 3d90b7898425fc04ea5e517047fd438c, type: 3}
   spectrogramHeightShift: -8.85
   waveformPlotZoom: 20
+  spectrogramZoom: 1
 --- !u!4 &2042851540
 Transform:
   m_ObjectHideFlags: 0

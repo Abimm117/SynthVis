@@ -19,6 +19,8 @@ public class Oscillator : MonoBehaviour
 
     public List<float> floatBuffer = new List<float>();
     public bool storeDataInBuffer = false;
+    SynthController synthController;
+    int idNum;
     #endregion
 
     private void Update()
@@ -26,9 +28,11 @@ public class Oscillator : MonoBehaviour
         timeT += Time.deltaTime;
     }
 
-    public void SetInstrument(Instrument i)
+    public void SetInstrument(Instrument inst, SynthController synth, int i)
     {
-        instrument = i;
+        instrument = inst;
+        synthController = synth;
+        idNum = i;
     }
 
     public void SetEnvelope(Instrument i)
@@ -54,7 +58,9 @@ public class Oscillator : MonoBehaviour
         for(int i = 0; i < data.Length; i += channels)
         {
             phase += increment;
-            float soundData = (float)(gain * env.getAmplitude(timeT) * instrument.CustomSynth((float)phase));
+            double e = env.getAmplitude(timeT);
+            synthController.SetCurrentEnvelopeValue(idNum, e);
+            float soundData = (float)(gain * e * instrument.CustomSynth((float)phase));
             data[i] = soundData;
 
             if (storeDataInBuffer)

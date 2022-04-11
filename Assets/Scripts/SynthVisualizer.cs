@@ -21,11 +21,13 @@ public class SynthVisualizer : MonoBehaviour
 
     // all instrument plot  
     public GameObject[] allSoundObjects;
+    Vector3 savedObjectScaleAll;
     public GameObject[] allSoundMarkers;
     Material[] allSoundMaterials;
 
     // single instrument plot
     public GameObject singleSoundObject;
+    Vector3 savedObjectScaleSingle;
     Material singleSoundMaterial;
     public TextMeshPro instrumentNumberLabel;
 
@@ -44,29 +46,28 @@ public class SynthVisualizer : MonoBehaviour
     public GetSpectrumData[] spectra;
     List<float> currentSpectrumData;
     List<float> currentFullSpectrumData;
-    float currentSpectrumGiniCoeff;
-    float currentSpectrumMaxFreqIndex;
-    float currentSpectrumWidth;
-    float currentVolume;
-    int nSpectrum = 1000;
+    public float currentSpectrumGiniCoeff;
+    public float currentSpectrumCentroid;
+    public float currentSpectrumSpread;
+    public float currentSpectrumFlatness;
+    int nSpectrum = 8192;
+    List<float> frequencyHz;
 
     // auxiliary plots
-    //public WaveformView waveformView;
-    //public GameObject oscPlotZoomIn;
-    //public GameObject oscPlotZoomOut;
     public GameObject waveformPlot;
     public GameObject spectrogram;
     public GameObject plotPointPrefab;
     public float spectrogramHeightShift;
     public float waveformPlotZoom;
+    public float spectrogramZoom;
     int numPlotPoints = 1000;
     List<GameObject> points = new List<GameObject>();
-    //List<GameObject> points1 = new List<GameObject>();
     List<GameObject> points2 = new List<GameObject>();
     float xmin = -5.75f;
     float xmax = 4.25f;
     float ymin = -3f;
     float ymax = 3f;
+
     #endregion
 
     private void Awake()
@@ -110,12 +111,19 @@ public class SynthVisualizer : MonoBehaviour
         {
             allSoundMaterials[i] = allSoundObjects[i].transform.GetComponent<Renderer>().sharedMaterial;
         }
+
+        savedObjectScaleAll = allSoundObjects[0].transform.localScale;
+        savedObjectScaleSingle = singleSoundObject.transform.localScale;
         #endregion
     }
 
     // Start is called before the first frame update
     void Start()
     {
+        float sampleRate = 44100f;
+        int bufferLength = nSpectrum/2;
+        int nSamplePerWave = Mathf.RoundToInt(bufferLength / (446.16f / (sampleRate / bufferLength)));
+        frequencyHz = makeArr(0, 32*nSamplePerWave, nSpectrum);
         StartCoroutine(Refresh());
     }
 
@@ -139,6 +147,8 @@ public class SynthVisualizer : MonoBehaviour
     void UpdateAllInstrumentPlot()
     {
         int n = synthController.CurrentInstrumentNumber();
+        float envVal = (float)synthController.CurrentEnvelopeValue() + .0001f;
+
         allSoundMarkers[n].SetActive(true);
         if (isPlaying)
         {
@@ -148,7 +158,7 @@ public class SynthVisualizer : MonoBehaviour
             //update sound position based on pitch (currently determined as the location of the maximum in the spectrogram)
             // represent this on log scale because human perception of audio is logarithmic
             // this method is currently glitchy
-            float target_frequency_pos = Mathf.Lerp(xmin, xmax, Mathf.Log(1 + (currentSpectrumMaxFreqIndex * frequencyPositionMultiplier + frequencyPositionShift) / 4096f, 2));
+            float target_frequency_pos = Mathf.Lerp(xmin, xmax, Mathf.Log(1 + (currentSpectrumCentroid * frequencyPositionMultiplier + frequencyPositionShift) / 4096f, 2));
             go.transform.localPosition = Vector3.MoveTowards(go.transform.localPosition, new Vector3(target_frequency_pos, go.transform.localPosition.y, go.transform.localPosition.z), objectLerpSpeed * Time.deltaTime);
 
             // update sound noise
@@ -158,8 +168,14 @@ public class SynthVisualizer : MonoBehaviour
             //TODO:
 
             //update sound size based on volume & envelope
+            go.transform.localScale = envVal * savedObjectScaleAll;
 
-            //update sound stretch based on the left/right spread of the spectrogram
+            //update sound stretch based on the currentSpectrumSpread of the spectrogram
+        }
+        else if (envVal > .0001f)
+        {
+            GameObject go = allSoundObjects[n];
+            go.transform.localScale = envVal * savedObjectScaleAll;
         }
         else
         {
@@ -178,6 +194,7 @@ public class SynthVisualizer : MonoBehaviour
     {
         int n = synthController.CurrentInstrumentNumber();
         instrumentNumberLabel.SetText("Inst #" + (n+1).ToString());
+        float envVal = (float)synthController.CurrentEnvelopeValue() + .0001f;
 
         if (isPlaying)
         {
@@ -190,8 +207,14 @@ public class SynthVisualizer : MonoBehaviour
             //TODO:
 
             //update sound size based on volume & envelope
+            
+            singleSoundObject.transform.localScale = envVal * savedObjectScaleSingle;
 
             //update sound stretch based on the left/right spread of the spectrogram
+        }
+        else if (envVal > .00001f)
+        {
+            singleSoundObject.transform.localScale = envVal * savedObjectScaleSingle;
         }
         else
         {
@@ -222,74 +245,125 @@ public class SynthVisualizer : MonoBehaviour
         StartCoroutine(Refresh());
     }
 
+    List<float> makeArr(float startValue, float stopValue, int cardinality)
+    {
+        List<float> arr = new List<float>();
+        float step = (stopValue - startValue) / (cardinality - 1);
+        for (int i = 0; i < cardinality; i++)
+        {
+            float val = startValue + (step * i);
+            arr.Add(val);
+        }
+        return arr;
+    }
+
     void RefreshSoundData()
     {
-        isPlaying = synthController.NumPlaying() > 0;
-        // add up all spectrum data coming from instrument voices
-        List<float> allSpectrumVals = new List<float>();
-        List<float[]> allSpectra = new List<float[]>();
+        int numPlaying = synthController.NumPlaying();
+        isPlaying = numPlaying > 0;
 
-        List<float> currentFullSpectrumData = new List<float>();
-        List<float[]> allFullSpectra = new List<float[]>();
-        for (int j = 0; j < 8; j++)
+        if (isPlaying)
         {
-            allSpectra.Add(spectra[j].GetSpectrum());
-            allFullSpectra.Add(spectra[j].GetFullSpectrum());
-        }
-        for (int i = 0; i < nSpectrum; i++)
-        {
-            float val = 0f;
+            // add up all spectrum data coming from instrument voices
+            List<float> allSpectrumVals = new List<float>();
+            List<float[]> allSpectra = new List<float[]>();
+
+            //List<float> currentFullSpectrumData = new List<float>();
+            //List<float[]> allFullSpectra = new List<float[]>();
             for (int j = 0; j < 8; j++)
             {
-                val += allSpectra[j][i];
+                allSpectra.Add(spectra[j].GetSpectrum());
+                //allFullSpectra.Add(spectra[j].GetFullSpectrum());
             }
-            allSpectrumVals.Add(val);
-        }
-
-        currentSpectrumMaxFreqIndex = 0;
-        float currentMaxVal = 0f;
-        for (int i = 0; i < 4096; i++)
-        {
-            float val = 0f;
-            for (int j = 0; j < 8; j++)
+            for (int i = 0; i < nSpectrum; i++)
             {
-                val += allFullSpectra[j][i];
+                float val = 0f;
+                for (int j = 0; j < 8; j++)
+                {
+                    val += allSpectra[j][i];
+                }
+                allSpectrumVals.Add(val);
             }
-            if (val > currentMaxVal)
+
+            /*
+            currentSpectrumMaxFreqIndex = 0;
+            float currentMaxVal = 0f;
+            for (int i = 0; i < 4096; i++)
             {
-                currentMaxVal = val;
-                currentSpectrumMaxFreqIndex = i;
+                float val = 0f;
+                for (int j = 0; j < 8; j++)
+                {
+                    val += allFullSpectra[j][i];
+                }
+                if (val > currentMaxVal)
+                {
+                    currentMaxVal = val;
+                    currentSpectrumMaxFreqIndex = i;
+                }
+                currentFullSpectrumData.Add(val);
+            }*/
+
+            //then, adjust currentSpectrumData so that it is bounded between 0 and 1 using the max val from allSpectrumVals
+            float maxval = Mathf.Max(allSpectrumVals.ToArray());
+            currentSpectrumData = new List<float>();
+            for (int i = 0; i < nSpectrum; i++)
+            {
+                float specVal = allSpectrumVals[i] / maxval;
+                currentSpectrumData.Add(specVal);
             }
-            currentFullSpectrumData.Add(val);
-        }
 
-        //then, adjust currentSpectrumData so that it is bounded between 0 and 1 using the max val from allSpectrumVals
-        float maxval = Mathf.Max(allSpectrumVals.ToArray());
-        currentSpectrumData = new List<float>();
-        for (int i = 0; i < nSpectrum; i++)
-        {
-            float specVal = allSpectrumVals[i] / maxval;
-            currentSpectrumData.Add(specVal);
-        }
+            //sort current spectrum data to calculate gini coefficient
+            List<float> sortedSpectrumList = new List<float>();
+            for (int i = 0; i < nSpectrum; i++)
+            {
+                sortedSpectrumList.Add(currentSpectrumData[i]);
+            }
+            sortedSpectrumList.Sort();
 
-        //sort current spectrum data to calculate gini coefficient
-        List<float> sortedSpectrumList = new List<float>();
-        for (int i = 0; i < nSpectrum; i++)
-        {
-            sortedSpectrumList.Add(currentSpectrumData[i]);
-        }
-        sortedSpectrumList.Sort();
+            //calculate spectrum centroid
+            float s = 0f;
+            for (int i = 0; i < nSpectrum; i++)
+            {
+                float p = currentSpectrumData[i];
+                float f = frequencyHz[i];
+                s += p * f;
+            }
+            currentSpectrumCentroid = (1f/numPlaying) * s / nSpectrum;
+
+            //calculate spectrum spread
+            s = 0f;
+            for (int i = 0; i < nSpectrum; i++)
+            {
+                float p = currentSpectrumData[i];
+                float f = frequencyHz[i];
+                s += p * Mathf.Pow((f - currentSpectrumCentroid), 2);
+            }
+            currentSpectrumSpread = Mathf.Sqrt(s);
+
+            //calculate spectrum flatness
+            float s0 = 0f;
+            float s1 = 0f;
+            for (int i = 0; i < nSpectrum; i++)
+            {
+                float a = currentSpectrumData[i];
+                s0 *= a;
+                s1 += a;
+            }
+            currentSpectrumFlatness = Mathf.Pow(s0, 1 / nSpectrum) / (s1 / nSpectrum);
 
 
-        //calculate gini coefficient
-        float sum0 = 0f;
-        float sum1 = 0f;
-        for (int i = 0; i < nSpectrum; i++)
-        {
-            sum0 += (nSpectrum - i) * sortedSpectrumList[i];
-            sum1 += sortedSpectrumList[i];
+            //calculate spectrum gini coefficient
+            s0 = 0f;
+            s1 = 0f;
+            for (int i = 0; i < nSpectrum; i++)
+            {
+                s0 += (nSpectrum - i) * sortedSpectrumList[i];
+                s1 += sortedSpectrumList[i];
+            }
+            currentSpectrumGiniCoeff = (1f / nSpectrum) * (nSpectrum + 1 - 2 * (s0 / s1));
         }
-        currentSpectrumGiniCoeff = (1f / nSpectrum) * (nSpectrum + 1 - 2 * (sum0 / sum1));
+        
+        
     }
 
     void RefreshAuxPlots()
@@ -321,7 +395,17 @@ public class SynthVisualizer : MonoBehaviour
             GameObject go = points2[n];
             // map the freq val, which is between 0 and 1, to a height on the backplate using a log scale
             float height = Mathf.Lerp(ymin, ymax, Mathf.Log(1 + currentSpectrumData[n], 2));
-            go.transform.localPosition = new Vector3(go.transform.localPosition.x, height + spectrogramHeightShift, go.transform.localPosition.z);
+            float xPos = go.transform.localPosition.x;// * spectrogramZoom;
+            if (xPos <= xmax)
+            {
+                go.SetActive(true);
+                go.transform.localPosition = new Vector3(xPos, height + spectrogramHeightShift, go.transform.localPosition.z);
+            }
+            else
+            {
+                go.SetActive(false);
+            }
+            
         }
     }
 }

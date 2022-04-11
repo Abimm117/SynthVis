@@ -25,6 +25,8 @@ public class SynthController : MonoBehaviour
     Instrument[] instruments;
     public int InstrumentNumber = 0;
 
+    public double[] currentEnvelopeValues = new double[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+
     public float volume = .07f;
 
     MusicTheory mt = new MusicTheory();
@@ -43,7 +45,7 @@ public class SynthController : MonoBehaviour
         for (int i = 0; i < numOscillators; i++)
         {
             osc[i] = sounds[i].transform.GetComponent<Oscillator>();
-            osc[i].SetInstrument(instrument0);
+            osc[i].SetInstrument(instrument0, this, i);
             audioSource[i] = sounds[i].transform.GetComponent<AudioSource>();
             audioSource[i].Play();
             oscInUse[i] = false;
@@ -67,6 +69,18 @@ public class SynthController : MonoBehaviour
         for(int i = 0; i < numOscillators; i++)
         {
             if (!oscInUse[i])
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    int GetFirstInUseOscillatorNum()
+    {
+        for (int i = 0; i < numOscillators; i++)
+        {
+            if (oscInUse[i])
             {
                 return i;
             }
@@ -215,4 +229,30 @@ public class SynthController : MonoBehaviour
         return InstrumentNumber;
     }
 
+    public void SetCurrentEnvelopeValue(int i, double e)
+    {
+        currentEnvelopeValues[i] = e;
+    }
+
+    public double CurrentEnvelopeValue()
+    {
+        int numInUse = 0;
+        float total = 0;
+        for (int i = 0; i < 8; i++)
+        {
+            if (oscInUse[i])
+            {
+                total += (float)currentEnvelopeValues[i];
+                numInUse++;
+            }
+        }
+        if (numInUse > 0)
+        {
+            return total / numInUse;
+        }
+        else
+        {
+            return 0f;
+        }
+    }
 }

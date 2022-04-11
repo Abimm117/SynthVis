@@ -7,7 +7,7 @@ public class GetSpectrumData : MonoBehaviour
 {
     #region define objects
     public AudioSource audioSrc;
-    float[] spectrum = new float[4096];
+    float[] spectrum = new float[8192];
     #endregion
 
     private void Start()
@@ -15,14 +15,15 @@ public class GetSpectrumData : MonoBehaviour
         StartCoroutine(UpdateSpectrumData());
     }
 
+    /*
     public float[] GetSpectrum()
     {
         float[] publicSpectrum = new float[1000];
         Array.Copy(spectrum, publicSpectrum, 1000);
         return publicSpectrum;
-    }
+    }*/
 
-    public float[] GetFullSpectrum()
+    public float[] GetSpectrum()
     {
         return spectrum;
     }
