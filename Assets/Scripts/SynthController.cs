@@ -35,6 +35,7 @@ public class SynthController : MonoBehaviour
 
     public GameObject forwardDualStrength;
     public GameObject backwardDualStrength;
+    public List<GameObject> sliders = new List<GameObject>();
 
     public Material whiteKey;
     public Material blackKey;
@@ -161,6 +162,33 @@ public class SynthController : MonoBehaviour
 
       forwardDualStrength.GetComponent<DualSlider>().limit = 1 - c;
       backwardDualStrength.GetComponent<DualSlider>().limit = 1 - a;
+
+      foreach(GameObject g in sliders)
+      {
+          EnvSlider gScript = g.GetComponent<EnvSlider>();
+          Slider gSlider = g.GetComponent<Slider>();
+
+          switch(gScript.role){
+            case "attack":
+              gSlider.value = inst.attack;
+              break;
+
+            case "decay":
+              gSlider.value = inst.decay;
+              break;
+
+            case "sustain":
+              gSlider.value = inst.sustain;
+              break;
+
+            case "release":
+               gSlider.value = inst.release;
+              break;
+
+            default:
+              break;
+          }
+      }
 
     }
 
