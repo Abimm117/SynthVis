@@ -26,8 +26,9 @@ public class SynthController : MonoBehaviour
     public int InstrumentNumber = 0;
 
     double[] currentEnvelopeValues = new double[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+    float currentEnvelope;
 
-    public float volume = .07f;
+    public float volume = .5f;
 
     MusicTheory mt = new MusicTheory();
     float currentNotePosition = 0f;
@@ -82,18 +83,6 @@ public class SynthController : MonoBehaviour
         for(int i = 0; i < numOscillators; i++)
         {
             if (!oscInUse[i])
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    int GetFirstInUseOscillatorNum()
-    {
-        for (int i = 0; i < numOscillators; i++)
-        {
-            if (oscInUse[i])
             {
                 return i;
             }
@@ -232,25 +221,17 @@ public class SynthController : MonoBehaviour
         currentEnvelopeValues[i] = e;
     }
 
-    public double CurrentEnvelopeValue()
+    public float CurrentEnvelopeValue()
     {
         int numInUse = 0;
         float total = 0;
         for (int i = 0; i < 8; i++)
         {
-            if (oscInUse[i])
-            {
-                total += (float)currentEnvelopeValues[i];
-                numInUse++;
-            }
+            float e = (float)currentEnvelopeValues[i];
+            total += e;
+            if (e > .0001f) { numInUse++; }
         }
-        if (numInUse > 0)
-        {
-            return total / numInUse;
-        }
-        else
-        {
-            return 0f;
-        }
+        currentEnvelope = total / numInUse;            
+        return currentEnvelope;
     }
 }

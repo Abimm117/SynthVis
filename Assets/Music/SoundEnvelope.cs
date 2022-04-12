@@ -45,9 +45,8 @@ public class SoundEnvelope : MonoBehaviour
         }
         else
         {
-            double a = Mathf.Min((float)sustainAmplitude, (float)maxAmpSoFar);
             //RELEASE
-            //amp = ((time - triggerOnTime - attackTime - decayTime) / releaseTime) * (0.0 - sustainAmplitude) + sustainAmplitude;
+            double a = Mathf.Min((float)sustainAmplitude, (float)maxAmpSoFar);           
             amp = ((time - triggerOffTime) / releaseTime) * (0.0 - a) + a;
         }
 

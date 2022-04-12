@@ -15,6 +15,7 @@ public class Oscillator : MonoBehaviour
     public float gain;
     public double frequency;
     public SoundEnvelope env;
+    double savedEnv = 0;
     public float timeT = 0.0f;
 
     public List<float> floatBuffer = new List<float>();
@@ -56,10 +57,14 @@ public class Oscillator : MonoBehaviour
         increment = frequency * 2.0 * Math.PI / sampling_frequency;
 
         for(int i = 0; i < data.Length; i += channels)
-        {
+        {            
             phase += increment;
             double e = env.getAmplitude(timeT);
-            synthController.SetCurrentEnvelopeValue(idNum, e);
+            if (e != savedEnv)
+            {
+                savedEnv = e;
+                synthController.SetCurrentEnvelopeValue(idNum, e);
+            }           
             float soundData = (float)(gain * e * instrument.CustomSynth((float)phase));
             data[i] = soundData;
 
