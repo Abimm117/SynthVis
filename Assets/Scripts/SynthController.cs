@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using MidiJack;
+using UnityEngine.UI;
 
 public class SynthController : MonoBehaviour
 {
@@ -33,6 +34,10 @@ public class SynthController : MonoBehaviour
     MusicTheory mt = new MusicTheory();
     float currentNotePosition = 0f;
 
+    public GameObject forwardDualStrength;
+    public GameObject backwardDualStrength;
+    public List<GameObject> sliders = new List<GameObject>();
+
     public Material whiteKey;
     public Material blackKey;
     public Material highlightKey;
@@ -63,6 +68,8 @@ public class SynthController : MonoBehaviour
         {
             midi_keyPlaying[i] = false;
         }
+
+        UpdateUI();
     }
     void Update()
     {
@@ -93,7 +100,7 @@ public class SynthController : MonoBehaviour
     void AssignNoteToOscillator(string noteName, int oscNum, int instrumentNum)
     {
         oscInUse[oscNum] = true;
-        
+
         Oscillator o = osc[oscNum];
         noteNameToOsc.Add(noteName, o);
         noteNameToOscID.Add(noteName, oscNum);
@@ -115,7 +122,7 @@ public class SynthController : MonoBehaviour
         noteNameToOsc[noteName].env.noteOff(noteNameToOsc[noteName].timeT);
         noteNameToOsc.Remove(noteName);
         oscInUse[noteNameToOscID[noteName]] = false;
-        
+
         noteNameToOscID.Remove(noteName);
         numPlaying--;
 
@@ -132,12 +139,54 @@ public class SynthController : MonoBehaviour
         ReleaseOscillatorFromNote(noteName);
     }
 
+    void UpdateUI(){
+      Instrument inst = CurrentInstrument();
+      float a = inst.wave1Strength;
+      float b = inst.wave2Strength;
+      float c = inst.wave3Strength;
+      float t = a + b + c;
+
+      forwardDualStrength.GetComponent<Slider>().value = a / t;
+      backwardDualStrength.GetComponent<Slider>().value = c / t;
+
+      forwardDualStrength.GetComponent<DualSlider>().limit = 1 - c;
+      backwardDualStrength.GetComponent<DualSlider>().limit = 1 - a;
+
+      foreach(GameObject g in sliders)
+      {
+          EnvSlider gScript = g.GetComponent<EnvSlider>();
+          Slider gSlider = g.GetComponent<Slider>();
+
+          switch(gScript.role){
+            case "attack":
+              gSlider.value = inst.attack;
+              break;
+
+            case "decay":
+              gSlider.value = inst.decay;
+              break;
+
+            case "sustain":
+              gSlider.value = inst.sustain;
+              break;
+
+            case "release":
+               gSlider.value = inst.release;
+              break;
+
+            default:
+              break;
+          }
+      }
+
+    }
+
     void CheckForComputerKeyboardAction()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1)) { InstrumentNumber = 0; }
-        if (Input.GetKeyDown(KeyCode.Alpha2)) { InstrumentNumber = 1; }
-        if (Input.GetKeyDown(KeyCode.Alpha3)) { InstrumentNumber = 2; }
-        if (Input.GetKeyDown(KeyCode.Alpha4)) { InstrumentNumber = 3; }
+        if (Input.GetKeyDown(KeyCode.Alpha1)) { InstrumentNumber = 0; UpdateUI();}
+        if (Input.GetKeyDown(KeyCode.Alpha2)) { InstrumentNumber = 1; UpdateUI();}
+        if (Input.GetKeyDown(KeyCode.Alpha3)) { InstrumentNumber = 2; UpdateUI();}
+        if (Input.GetKeyDown(KeyCode.Alpha4)) { InstrumentNumber = 3; UpdateUI();}
 
         foreach (KeyCode keyName in mt.keyboardPianoMap.Keys)
         {
@@ -209,7 +258,7 @@ public class SynthController : MonoBehaviour
     public Instrument CurrentInstrument()
     {
         return instruments[InstrumentNumber];
-    }  
+    }
 
     public int CurrentInstrumentNumber()
     {
