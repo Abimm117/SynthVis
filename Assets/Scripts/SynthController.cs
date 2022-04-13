@@ -139,7 +139,7 @@ public class SynthController : MonoBehaviour
         ReleaseOscillatorFromNote(noteName);
     }
 
-    void UpdateUI(){
+    public void UpdateUI(){
       Instrument inst = CurrentInstrument();
       float a = inst.wave1Strength;
       float b = inst.wave2Strength;
@@ -280,7 +280,7 @@ public class SynthController : MonoBehaviour
             total += e;
             if (e > .0001f) { numInUse++; }
         }
-        currentEnvelope = total / numInUse;            
+        currentEnvelope = total / numInUse;
         return currentEnvelope;
     }
 }

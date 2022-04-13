@@ -6,7 +6,7 @@ using System.Linq;
 using System.IO;
 using TMPro;
 
-public enum VisualizationMode { SingleInstrument, AllInstruments}
+public enum VisualizationMode {SingleInstrument, AllInstruments}
 
 public enum VertexShaderMode { Object, World, Tangent};
 
@@ -24,7 +24,7 @@ public class SynthVisualizer : MonoBehaviour
     public GameObject allInstrumentPlot;
     public GameObject singleInstrumentPlot;
 
-    // all instrument plot  
+    // all instrument plot
     public GameObject[] allSoundObjects;
     Vector3 savedObjectScaleAll;
     public GameObject[] allSoundMarkers;
@@ -66,7 +66,7 @@ public class SynthVisualizer : MonoBehaviour
     public float currentSpectrumFlatness;
     int nSpectrum = 4096;
     List<float> frequencyHz;
-    
+
 
     // auxiliary plots
     public GameObject waveformPlot;
@@ -181,7 +181,7 @@ public class SynthVisualizer : MonoBehaviour
                 singleInstrumentPlot.SetActive(true);
                 allInstrumentPlot.SetActive(false);
                 UpdateSingleInstrumentPlot();
-            }     
+            }
 
             if (refreshAux)
             {
@@ -284,14 +284,14 @@ public class SynthVisualizer : MonoBehaviour
         {
             // add up all spectrum data coming from instrument voices
             List<float[]> allSpectra = new List<float[]>();
-            
+
             for (int j = 0; j < numPlaying; j++)
             {
                 allSpectra.Add(spectra[j].GetSpectrum());
             }
             float maxval = 0f;
             float val;
-            
+
             for (int i = 0; i < nSpectrum; i++)
             {
                 val = 0f;
@@ -312,7 +312,7 @@ public class SynthVisualizer : MonoBehaviour
             }
             currentSpectrumCentroid = (1f / numPlaying) * centroidSum / nSpectrum;
             /*
-           
+
             //calculate spectrum spread
             s = 0f;
             for (int i = 0; i < nSpectrum; i++)
@@ -346,7 +346,7 @@ public class SynthVisualizer : MonoBehaviour
                 giniSum1 += currentSpectrumData[i];
             }
             currentSpectrumGiniCoeff = (1f / nSpectrum) * (nSpectrum + 1 - 2 * (giniSum0 / giniSum1));
-        }              
+        }
     }
 
     void RefreshAuxPlots()
@@ -367,7 +367,7 @@ public class SynthVisualizer : MonoBehaviour
                 }
             }
 
-            // map the synth val, which is between -1 and 1, to a height on the backplate 
+            // map the synth val, which is between -1 and 1, to a height on the backplate
             float height = Mathf.Lerp(ymin, ymax, 0.5f * (synthVal + 1f));
             go.transform.localPosition = new Vector3(go.transform.localPosition.x, height, go.transform.localPosition.z);
         }
@@ -388,7 +388,7 @@ public class SynthVisualizer : MonoBehaviour
             {
                 go.SetActive(false);
             }
-            
+
         }
     }
 }
