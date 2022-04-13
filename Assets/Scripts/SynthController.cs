@@ -37,6 +37,8 @@ public class SynthController : MonoBehaviour
     public GameObject forwardDualStrength;
     public GameObject backwardDualStrength;
     public List<GameObject> sliders = new List<GameObject>();
+    public List<GameObject> waveDrops = new List<GameObject>();
+    public Dropdown instDrop;
 
     public Material whiteKey;
     public Material blackKey;
@@ -174,9 +176,45 @@ public class SynthController : MonoBehaviour
                gSlider.value = inst.release;
               break;
 
+            case "freq1":
+              gSlider.value = inst.wave1freq;
+              break;
+
+            case "freq2":
+              gSlider.value = inst.wave2freq;
+              break;
+
+            case "freq3":
+              gSlider.value = inst.wave3freq;
+              break;
+
             default:
               break;
           }
+      }
+
+      instDrop.value = InstrumentNumber;
+
+      foreach(GameObject g in waveDrops){
+        InstSlideScript scrpt = g.GetComponent<InstSlideScript>();
+        Dropdown drop = g.GetComponent<Dropdown>();
+        switch(scrpt.wave)
+        {
+          case 1:
+            drop.value = (int) inst.wave1type;
+          break;
+
+          case 2:
+            drop.value = (int) inst.wave2type;
+          break;
+
+          case 3:
+            drop.value = (int) inst.wave3type;
+          break;
+
+          default:
+          break;
+        }
       }
 
     }

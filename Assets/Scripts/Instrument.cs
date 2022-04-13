@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum WaveType { SINE, SQUARE, TRIANGLE };
+public enum WaveType { SINE = 0, SQUARE = 1, TRIANGLE = 2 };
 public class Instrument : MonoBehaviour
 {
     //TODO:
