@@ -2,19 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum WaveType { SINE, SQUARE, TRIANGLE };
+public enum WaveType { SINE, SQUARE, TRIANGLE, SAWTOOTH};
 public class Instrument : MonoBehaviour
 {
     //TODO:
-
-    //LFO and vibrato
-    // return Mathf.Sin(p + (float)(0.5 * LFOfreq * Mathf.Sin((float)(LFOamp*2.0 * Math.PI / sampling_frequency))));
-
-    //chorus
-    // is this as simple as multiple copies of the sound itself?
-
-    //reverb
-    // unknown
 
     //direct EQ balancing. i think this uses some kind of inverse-FFT to do the following:
     // 1: use FFT to convert sound to frequency hist
@@ -31,34 +22,40 @@ public class Instrument : MonoBehaviour
     public float release;
 
     // custome synth settings
-    public float wave1freq = 0.9f;
-    public float wave2freq = 0.7f;
-    public float wave3freq = 0.4f;
-    public float wave1Strength = 1f;
-    public float wave2Strength = 1f;
-    public float wave3Strength = 1f;
+    public float wave1freq;
+    public float wave2freq;
+    public float wave3freq;
+    public float wave1Strength;
+    public float wave2Strength;
+    public float wave3Strength;
     public WaveType wave1type;
     public WaveType wave2type;
     public WaveType wave3type;
+    public float wave1lfofreq;
+    public float wave2lfofreq;
+    public float wave3lfofreq;
+    public float wave1lfoStrength;
+    public float wave2lfoStrength;
+    public float wave3lfoStrength;
+
+
+    float ProcessWave(float x, WaveType wavetype, float strength, float freq, float lfoStrength, float lfofreq)
+    {
+        float lfoAmp = lfoStrength * Mathf.Sin(x * freq * lfofreq / 44100);
+        float f;
+        if (wavetype == WaveType.SINE) { f = Mathf.Sin(freq * x); }
+        else if (wavetype == WaveType.SQUARE) { f = Square(freq * x); }
+        else if (wavetype == WaveType.TRIANGLE) {f = Triangle(freq * x); }
+        else if (wavetype == WaveType.SAWTOOTH) { f = Sawtooth(freq * x); }
+        else { f = 0f; }
+        return strength * ((lfoAmp * f) - (1 - lfoStrength) * f);
+    }
 
     public float CustomSynth(float x)
     {
-        float wave1 = 0f;
-        float wave2 = 0f;
-        float wave3 = 0f;
-
-        if (wave1type == WaveType.SINE) { wave1 = wave1Strength * Mathf.Sin(wave1freq * x); }
-        else if (wave1type == WaveType.SQUARE) { wave1 = wave1Strength * Square(wave1freq * x); }
-        else if (wave1type == WaveType.TRIANGLE) { wave1 = wave1Strength * Triangle(wave1freq * x); }
-
-        if (wave2type == WaveType.SINE) { wave2 = wave2Strength * Mathf.Sin(wave2freq * x); }
-        else if (wave2type == WaveType.SQUARE) { wave2 = wave2Strength * Square(wave2freq * x); }
-        else if (wave2type == WaveType.TRIANGLE) { wave2 = wave2Strength * Triangle(wave2freq * x); }
-
-        if (wave3type == WaveType.SINE) { wave3 = wave3Strength * Mathf.Sin(wave3freq * x); }
-        else if (wave3type == WaveType.SQUARE) { wave3 = wave3Strength * Square(wave3freq * x); }
-        else if (wave3type == WaveType.TRIANGLE) { wave3 = wave3Strength * Triangle(wave3freq * x); }
-
+        float wave1 = ProcessWave(x, wave1type, wave1Strength, wave1freq, wave1lfoStrength, wave1lfofreq);
+        float wave2 = ProcessWave(x, wave2type, wave2Strength, wave2freq, wave2lfoStrength, wave2lfofreq);
+        float wave3 = ProcessWave(x, wave3type, wave3Strength, wave3freq, wave3lfoStrength, wave3lfofreq);
         float normalizingConstant = 1f / (3f * (Mathf.Abs(wave1Strength) + Mathf.Abs(wave2Strength) + Mathf.Abs(wave3Strength)));
         return normalizingConstant * (wave1 + wave2 + wave3);
     }
@@ -71,5 +68,10 @@ public class Instrument : MonoBehaviour
     float Triangle(float phase)
     {
         return Mathf.Abs((((phase - Mathf.PI/2)/4) % Mathf.PI/2) - Mathf.PI/4) * 8f / Mathf.PI - 1;
+    }
+
+    float Sawtooth(float phase)
+    {
+        return 2*((phase + Mathf.PI / 2) / (2 * Mathf.PI) - Mathf.Floor((phase + Mathf.PI / 2) / (2 * Mathf.PI) + 0.5f));
     }
 }

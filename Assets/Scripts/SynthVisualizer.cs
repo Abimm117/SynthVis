@@ -7,14 +7,14 @@ using System.IO;
 using TMPro;
 
 public enum VisualizationMode { SingleInstrument, AllInstruments}
-
 public enum VertexShaderMode { Object, World, Tangent};
-
 
 public class SynthVisualizer : MonoBehaviour
 {
+    public static SynthVisualizer Instance { get; private set; }
     #region define objects
     public VisualizationMode mode;
+    VisualizationMode savedMode;
 
     // time
     float timeT = 0f;
@@ -46,27 +46,34 @@ public class SynthVisualizer : MonoBehaviour
 
     // sound visualization settings
     public bool refreshAux = false;
-    public float refreshSpeed;
-    public float noiseMultiplier;
-    public float noiseExponent;
-    public float frequencyPositionMultiplier;
-    public float frequencyPositionShift;
-    public float objectLerpSpeed;
-    float noiseLevel;
+    public float refreshSpeed = .05f;
+    public float noiseMultiplier = 1500;
+    public float noiseExponent = 1.5f;
+    public float noiseEnvelopeExponent;
+    public float centroidMultiplier;
+    public float wobbleMultiplier;
+    public string Instrument1Color;
+    public string Instrument2Color;
+    public string Instrument3Color;
+    public string Instrument4Color;
+    string[] instrumentColors;
 
     // sound data
-    public AudioListener mix;
     public SynthController synthController;
     bool isPlaying = false;
-    float[] currentSpectrumData;
+    List<float[]> currentSpectrumData;
     public GetSpectrumData[] spectra;
-    public float currentSpectrumGiniCoeff = 1f;
-    public float currentSpectrumCentroid;
-    public float currentSpectrumSpread;
-    public float currentSpectrumFlatness;
-    int nSpectrum = 4096;
-    List<float> frequencyHz;
-    
+    public float giniSlowdownMultiplier;
+    public float[] currentSpectrumGiniCoeffs = new float[4];
+    public float[] previousSpectrumGiniCoeffs = new float[4];
+    public float[] currentSpectrumCentroids = new float[4];
+    public float[] currentNoises = new float[4];
+    public float[] currentBrightnesses = new float[4];
+    public float[] currentSpeeds = new float[4];
+    public float[] currentSpectrumSpreads = new float[4];
+    public float[] currentSpectrumFlatnesses = new float[4];
+    int nSpectrum = 8192;
+    List<float> frequencyHz;    
 
     // auxiliary plots
     public GameObject waveformPlot;
@@ -105,12 +112,34 @@ public class SynthVisualizer : MonoBehaviour
             singleSound = singleSoundObjectTangent;
             savedObjectScaleSingle = savedTangentscale;
         }
-        singleSoundMaterial = singleSound.transform.GetComponent<Renderer>().sharedMaterial;
-        //savedObjectScaleSingle = singleSound.transform.localScale;
+        singleSoundMaterial = singleSound.transform.GetComponent<Renderer>().material;
+    }
+
+    Vector3 ColorStringToRGB(int instrumentNum)
+    {
+        switch (instrumentColors[instrumentNum])
+        {
+            case "red": return new Vector3(1, 0, 0);
+            case "green": return new Vector3(0, 1, 0);
+            case "blue": return new Vector3(0, 0, 1);
+            case "yellow": return new Vector3(1, 1, 0);
+            case "orange": return new Vector3(1, .5f, 0);
+            case "magenta": return new Vector3(1, 0, 1);
+            case "cyan": return new Vector3(0, 1, 1);
+            case "grey": return Vector3.one;
+            default: return Vector3.zero;
+        }
     }
 
     private void Awake()
     {
+        instrumentColors = new string[] { Instrument1Color, Instrument2Color, Instrument3Color, Instrument4Color };
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+            return;
+        }
+        Instance = this;
         #region initialize aux plots
         float xPos = xmin;
         float xStep = (xmax - xmin) / numPlotPoints;
@@ -131,10 +160,14 @@ public class SynthVisualizer : MonoBehaviour
         #endregion
 
         #region initialize sound data
-        currentSpectrumData = new float[nSpectrum];
-        for (int n = 0; n < nSpectrum; n++)
+        currentSpectrumData = new List<float[]>();
+        for (int i = 0; i < 4; i++)
         {
-            currentSpectrumData[n] = 0f;
+            currentSpectrumData.Add(new float[nSpectrum]);
+            for (int n = 0; n < nSpectrum; n++)
+            {
+                currentSpectrumData[i][n] = 0f;
+            }
         }
 
         float sampleRate = 44100f;
@@ -146,7 +179,6 @@ public class SynthVisualizer : MonoBehaviour
             Debug.Log(i.ToString() + ": " + frequencyHz[i].ToString());
         }
         savedVertexMode = vertexMode;
-        noiseLevel = 0f;
         #endregion
 
         #region load sound object materials
@@ -157,14 +189,17 @@ public class SynthVisualizer : MonoBehaviour
         allSoundMaterials = new Material[allSoundObjects.Length];
         for (int i = 0; i < 4; i++)
         {
-            allSoundMaterials[i] = allSoundObjects[i].transform.GetComponent<Renderer>().sharedMaterial;
+            allSoundMaterials[i] = allSoundObjects[i].transform.GetComponent<Renderer>().material;
         }
         savedObjectScaleAll = allSoundObjects[0].transform.localScale;
         #endregion
+
+        savedMode = (mode == VisualizationMode.AllInstruments) ? VisualizationMode.SingleInstrument : VisualizationMode.AllInstruments;
     }
 
     private void Update()
     {
+        instrumentColors = new string[] { Instrument1Color, Instrument2Color, Instrument3Color, Instrument4Color };
         timeT += Time.deltaTime;
         if (timeT > nextTime)
         {
@@ -172,20 +207,29 @@ public class SynthVisualizer : MonoBehaviour
             RefreshSoundData();
             if (mode == VisualizationMode.AllInstruments)
             {
-                singleInstrumentPlot.SetActive(false);
-                allInstrumentPlot.SetActive(true);
                 UpdateAllInstrumentPlot();
+                if (savedMode != mode)
+                {
+                    singleInstrumentPlot.SetActive(false);
+                    allInstrumentPlot.SetActive(true);
+                    synthController.ResetKeyboard(mode);
+                }                                
             }
             else if (mode == VisualizationMode.SingleInstrument)
             {
-                singleInstrumentPlot.SetActive(true);
-                allInstrumentPlot.SetActive(false);
                 UpdateSingleInstrumentPlot();
-            }     
+                if (savedMode != mode)
+                {
+                    singleInstrumentPlot.SetActive(true);
+                    allInstrumentPlot.SetActive(false);
+                    synthController.ResetKeyboard(mode);
+                }
+            }
+            savedMode = mode;
 
             if (refreshAux)
             {
-                RefreshAuxPlots();
+                //RefreshAuxPlots();
             }
             if (vertexMode != savedVertexMode)
             {
@@ -195,52 +239,61 @@ public class SynthVisualizer : MonoBehaviour
         }
     }
 
+    float FreqToMel(float freq)
+    {
+        return 2595f * Mathf.Log(1 + freq / 500);
+    }
+
+    void UpdateSingleSoundObject(GameObject go, float envVal, int soundNum)
+    {
+        if (float.IsNaN(envVal)) { envVal = .01f; }
+        go.SetActive(true);
+        float gini = giniSlowdownMultiplier * currentSpectrumGiniCoeffs[soundNum] + (1 - giniSlowdownMultiplier) * previousSpectrumGiniCoeffs[soundNum];
+        currentNoises[soundNum] = Mathf.Pow(envVal, noiseEnvelopeExponent) * noiseMultiplier * Mathf.Pow(1f - gini, noiseExponent);
+        currentBrightnesses[soundNum] = centroidMultiplier * FreqToMel(currentSpectrumCentroids[soundNum]);
+        currentSpeeds[soundNum] = synthController.GetInstrumentTotalLFO(soundNum);
+        Vector3 color = ColorStringToRGB(soundNum);
+        singleSoundMaterial.SetFloat("_noiseScale", currentNoises[soundNum]);
+        singleSoundMaterial.SetFloat("_brightness", currentBrightnesses[soundNum]);
+        singleSoundMaterial.SetFloat("_wobbleSpeed", currentSpeeds[soundNum]);
+        singleSoundMaterial.SetFloat("_redVal", color.x);
+        singleSoundMaterial.SetFloat("_greenVal", color.y);
+        singleSoundMaterial.SetFloat("_blueVal", color.z);
+        go.transform.localScale = Mathf.Pow(envVal, 2) * savedObjectScaleSingle;
+    }
+
     void UpdateSoundObject(GameObject go, float envVal, int soundNum)
     {
+        if (float.IsNaN(envVal)) { envVal = .01f; }
         go.SetActive(true);
-        noiseLevel = Mathf.Pow(envVal, 2) * noiseMultiplier * Mathf.Pow(1f - currentSpectrumGiniCoeff, noiseExponent);
-        if (soundNum == -1)
-        {
-            singleSoundMaterial.SetFloat("_scale", noiseLevel);
-            go.transform.localScale = envVal * savedObjectScaleSingle;
-        }
-        else
-        {
-            allSoundMaterials[soundNum].SetFloat("_scale", noiseLevel);
-            go.transform.localScale = envVal * savedObjectScaleAll;
-        }
-
-        //TODO:
-        //update sound stretch based on the currentSpectrumSpread of the spectrogram
+        float gini = giniSlowdownMultiplier * Time.deltaTime * currentSpectrumGiniCoeffs[soundNum] + (1 - giniSlowdownMultiplier * Time.deltaTime) * previousSpectrumGiniCoeffs[soundNum];
+        currentNoises[soundNum] = Mathf.Pow(envVal, noiseEnvelopeExponent) * noiseMultiplier * Mathf.Pow(1f - gini, noiseExponent);
+        currentBrightnesses[soundNum] = centroidMultiplier * FreqToMel(currentSpectrumCentroids[soundNum]);
+        currentSpeeds[soundNum] = synthController.GetInstrumentTotalLFO(soundNum);
+        Vector3 color = ColorStringToRGB(soundNum);
+        allSoundMaterials[soundNum].SetFloat("_noiseScale", currentNoises[soundNum]);
+        allSoundMaterials[soundNum].SetFloat("_brightness", currentBrightnesses[soundNum]);
+        allSoundMaterials[soundNum].SetFloat("_wobbleSpeed", currentSpeeds[soundNum]);
+        allSoundMaterials[soundNum].SetFloat("_redVal", color.x);
+        allSoundMaterials[soundNum].SetFloat("_greenVal", color.y);
+        allSoundMaterials[soundNum].SetFloat("_blueVal", color.z);
+        go.transform.localScale = Mathf.Pow(envVal, 2) * savedObjectScaleAll;       
     }
 
     void UpdateAllInstrumentPlot()
     {
-        int n = synthController.CurrentInstrumentNumber();
-        float envVal = (float)synthController.CurrentEnvelopeValue();
-
-        allSoundMarkers[n].SetActive(true);
-        if (isPlaying || envVal > .0001f)
+        for (int n = 0; n < 4; n++)
         {
-            GameObject go = allSoundObjects[n];
-            UpdateSoundObject(go, envVal, n);
-
-            // update sound position based on pitch
-            // current calculated as centroid of the spectrum (weighted average of frequencies multiplied by their heights in the spectrogram)
-            // represent this on log scale because human perception of audio is logarithmic
-            // this method is currently glitchy as fuck
-            float target_frequency_pos = Mathf.Lerp(xmin, xmax, frequencyPositionMultiplier * Mathf.Log(currentSpectrumCentroid) + frequencyPositionShift);
-            go.transform.localPosition = Vector3.MoveTowards(go.transform.localPosition, new Vector3(target_frequency_pos, go.transform.localPosition.y, go.transform.localPosition.z), objectLerpSpeed * Time.deltaTime);
-        }
-        else
-        {
-            for (int i = 0; i < 4; i++)
+            float envVal = synthController.CurrentEnvelopeValue(n);
+            if (envVal > .0001f)
             {
-                allSoundObjects[i].SetActive(false);
-                if (i != n)
-                {
-                    allSoundMarkers[i].SetActive(false);
-                }
+                allSoundMarkers[n].SetActive(true);
+                UpdateSoundObject(allSoundObjects[n], envVal, n);
+            }
+            else
+            {
+                allSoundObjects[n].SetActive(false);
+                allSoundMarkers[n].SetActive(false);
             }
         }
     }
@@ -249,10 +302,10 @@ public class SynthVisualizer : MonoBehaviour
     {
         int n = synthController.CurrentInstrumentNumber();
         instrumentNumberLabel.SetText("Inst #" + (n+1).ToString());
-        float envVal = synthController.CurrentEnvelopeValue();
+        float envVal = synthController.CurrentEnvelopeValue(n);
         if (isPlaying || envVal > .0001f)
         {
-            UpdateSoundObject(singleSound, envVal, -1);
+            UpdateSingleSoundObject(singleSound, envVal, n);
         }
         else
         {
@@ -289,66 +342,78 @@ public class SynthVisualizer : MonoBehaviour
             {
                 allSpectra.Add(spectra[j].GetSpectrum());
             }
-            float maxval = 0f;
-            float val;
             
-            for (int i = 0; i < nSpectrum; i++)
+            //float[] vals = new float[4];
+
+            for (int instrumentNum = 0; instrumentNum < 4; instrumentNum++)
             {
-                val = 0f;
-                for (int j = 0; j < numPlaying; j++)
+                if (synthController.CurrentEnvelopeValue(instrumentNum) > .0001f)
                 {
-                    val += allSpectra[j][i];
+                    float maxval = 0f;
+                    for (int i = 0; i < nSpectrum; i++)
+                    {
+                        float val = 0f;
+                        for (int j = 0; j < numPlaying; j++)
+                        {
+                            if (instrumentNum == synthController.GetOscillatorInstrumentNumber(j))
+                            {
+                                val += allSpectra[j][i];
+                            }
+                        }
+                        currentSpectrumData[instrumentNum][i] = val;
+                        if (val > maxval) { maxval = val; }
+                    }
+
+                    float centroidSum = 0f;
+                    for (int i = 0; i < nSpectrum; i++)
+                    {
+                        float p = currentSpectrumData[instrumentNum][i] / maxval;
+                        float f = frequencyHz[i];
+                        centroidSum += p * f;
+                    }
+                    currentSpectrumCentroids[instrumentNum] = (1f / numPlaying) * centroidSum / nSpectrum;
+
+                    //calculate spectrum gini coefficient
+                    //sort current spectrum data to calculate gini coefficient
+                    Array.Copy(currentSpectrumGiniCoeffs, previousSpectrumGiniCoeffs, 4);
+                    Array.Sort(currentSpectrumData[instrumentNum]);
+                    float giniSum0 = 0f;
+                    float giniSum1 = 0f;
+                    for (int i = 0; i < nSpectrum; i++)
+                    {
+                        giniSum0 += (nSpectrum - i) * currentSpectrumData[instrumentNum][i];
+                        giniSum1 += currentSpectrumData[instrumentNum][i];
+                    }
+                    currentSpectrumGiniCoeffs[instrumentNum] = (1f / nSpectrum) * (nSpectrum + 1 - 2 * (giniSum0 / giniSum1));
+                               
+                    //calculate spectrum spread
+                    float spreadSum = 0f;
+                    for (int i = 0; i < nSpectrum; i++)
+                    {
+                        float p = currentSpectrumData[instrumentNum][i];
+                        float f = frequencyHz[i];
+                        spreadSum += p * Mathf.Pow((f - currentSpectrumCentroids[instrumentNum]), 2);
+                    }
+                    currentSpectrumSpreads[instrumentNum] = Mathf.Sqrt(spreadSum);
+
+                    //calculate spectrum flatness
+                    float flatnessProduct = 0f;
+                    float flatnessSum = 0f;
+                    for (int i = 0; i < nSpectrum; i++)
+                    {
+                        float a = currentSpectrumData[instrumentNum][i];
+                        flatnessProduct *= a;
+                        flatnessSum += a;
+                    }
+                    currentSpectrumFlatnesses[instrumentNum] = Mathf.Pow(flatnessProduct, 1 / nSpectrum) / (flatnessSum / nSpectrum);
+            
                 }
-                currentSpectrumData[i] = val;
-                if (val > maxval) { maxval = val; }
             }
-
-            float centroidSum = 0f;
-            for (int i = 0; i < nSpectrum; i++)
-            {
-                float p = currentSpectrumData[i] / maxval;
-                float f = frequencyHz[i];
-                centroidSum += p * f;
-            }
-            currentSpectrumCentroid = (1f / numPlaying) * centroidSum / nSpectrum;
-            /*
-           
-            //calculate spectrum spread
-            s = 0f;
-            for (int i = 0; i < nSpectrum; i++)
-            {
-                float p = currentSpectrumData[i];
-                float f = frequencyHz[i];
-                s += p * Mathf.Pow((f - currentSpectrumCentroid), 2);
-            }
-            currentSpectrumSpread = Mathf.Sqrt(s);
-
-            //calculate spectrum flatness
-            float s0 = 0f;
-            float s1 = 0f;
-            for (int i = 0; i < nSpectrum; i++)
-            {
-                float a = currentSpectrumData[i];
-                s0 *= a;
-                s1 += a;
-            }
-            currentSpectrumFlatness = Mathf.Pow(s0, 1 / nSpectrum) / (s1 / nSpectrum);
-            */
-
-            //calculate spectrum gini coefficient
-            //sort current spectrum data to calculate gini coefficient
-            Array.Sort(currentSpectrumData);
-            float giniSum0 = 0f;
-            float giniSum1 = 0f;
-            for (int i = 0; i < nSpectrum; i++)
-            {
-                giniSum0 += (nSpectrum - i) * currentSpectrumData[i];
-                giniSum1 += currentSpectrumData[i];
-            }
-            currentSpectrumGiniCoeff = (1f / nSpectrum) * (nSpectrum + 1 - 2 * (giniSum0 / giniSum1));
+            
         }              
     }
 
+    /*
     void RefreshAuxPlots()
     {
         // waveform plot
@@ -391,4 +456,5 @@ public class SynthVisualizer : MonoBehaviour
             
         }
     }
+    */
 }

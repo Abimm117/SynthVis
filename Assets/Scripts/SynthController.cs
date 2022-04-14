@@ -3,6 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using MidiJack;
 using UnityEngine.UI;
+using System;
+
+public class Dictionary<TKey1, TKey2, TValue> : Dictionary<Tuple<TKey1, TKey2>, TValue>, IDictionary<Tuple<TKey1, TKey2>, TValue>
+{
+
+    public TValue this[TKey1 key1, TKey2 key2]
+    {
+        get { return base[Tuple.Create(key1, key2)]; }
+        set { base[Tuple.Create(key1, key2)] = value; }
+    }
+
+    public void Add(TKey1 key1, TKey2 key2, TValue value)
+    {
+        base.Add(Tuple.Create(key1, key2), value);
+    }
+
+    public bool ContainsKey(TKey1 key1, TKey2 key2)
+    {
+        return base.ContainsKey(Tuple.Create(key1, key2));
+    }
+}
 
 public class SynthController : MonoBehaviour
 {
@@ -13,9 +34,10 @@ public class SynthController : MonoBehaviour
     Oscillator[] osc = new Oscillator[8];
     AudioSource[] audioSource = new AudioSource[8];
     bool[] oscInUse = new bool[8];
+    public int[] oscToInstrumentMap = new int[8];
     int numPlaying = 0;
-    Dictionary<string, Oscillator> noteNameToOsc = new Dictionary<string, Oscillator>();
-    Dictionary<string, int> noteNameToOscID = new Dictionary<string, int>();
+    Dictionary<string, int, Oscillator> noteNameAndInstToOsc = new Dictionary<string, int, Oscillator>();
+    Dictionary<string, int, int> noteNameAndInstToOscID = new Dictionary<string, int, int>();
     Dictionary<KeyCode, bool> keyPlaying = new Dictionary<KeyCode, bool>();
     Dictionary<int, bool> midi_keyPlaying = new Dictionary<int, bool>();
 
@@ -27,9 +49,12 @@ public class SynthController : MonoBehaviour
     public int InstrumentNumber = 0;
 
     double[] currentEnvelopeValues = new double[] { 0, 0, 0, 0, 0, 0, 0, 0 };
-    float currentEnvelope;
+    public float[] currentInstrumentEnvelopeValues = new float[4];
+    bool[] instrumentIsPlaying = new bool[] { false, false, false, false };
 
     public float volume = .5f;
+    public string ROOTNOTE;
+    VisualizationMode vizMode;
 
     MusicTheory mt = new MusicTheory();
     float currentNotePosition = 0f;
@@ -43,7 +68,6 @@ public class SynthController : MonoBehaviour
     public Material highlightKey;
     #endregion
 
-    // Start is called before the first frame update
     void Awake()
     {
         instruments = new Instrument[] { instrument0, instrument1, instrument2, instrument3};
@@ -57,12 +81,6 @@ public class SynthController : MonoBehaviour
             oscInUse[i] = false;
         }
 
-        // register keyboard keys
-        foreach (KeyCode keyName in mt.keyboardPianoMap.Keys)
-        {
-            keyPlaying[keyName] = false;
-        }
-
         // register midi key numbers
         foreach (int i in mt.midiKeyNumbers)
         {
@@ -72,7 +90,7 @@ public class SynthController : MonoBehaviour
         UpdateUI();
     }
     void Update()
-    {
+    {       
         CheckForComputerKeyboardAction();
         CheckForMidiKeyboardAction();
     }
@@ -100,13 +118,15 @@ public class SynthController : MonoBehaviour
     void AssignNoteToOscillator(string noteName, int oscNum, int instrumentNum)
     {
         oscInUse[oscNum] = true;
+        oscToInstrumentMap[oscNum] = instrumentNum;
+        instrumentIsPlaying[instrumentNum] = true;
 
         Oscillator o = osc[oscNum];
-        noteNameToOsc.Add(noteName, o);
-        noteNameToOscID.Add(noteName, oscNum);
+        noteNameAndInstToOsc[noteName, instrumentNum] = o;
+        noteNameAndInstToOscID[noteName, instrumentNum] = oscNum;
         o.SetEnvelope(instruments[instrumentNum]);
 
-        PlayNote(noteName);
+        PlayNote(noteName, instrumentNum);
         numPlaying++;
 
         //press key in the prefab
@@ -114,16 +134,16 @@ public class SynthController : MonoBehaviour
         Transform key = transform.Find("Keys/Note" + noteName);
         key.localPosition = new Vector3(_p[0] - 0.04f, _p[1], _p[2]);
         key.GetComponent<MeshRenderer>().material = highlightKey;
-
     }
 
-    void ReleaseOscillatorFromNote(string noteName)
+    void ReleaseOscillatorFromNote(string noteName, int instrumentNum)
     {
-        noteNameToOsc[noteName].env.noteOff(noteNameToOsc[noteName].timeT);
-        noteNameToOsc.Remove(noteName);
-        oscInUse[noteNameToOscID[noteName]] = false;
+        noteNameAndInstToOsc[noteName, instrumentNum].env.noteOff(noteNameAndInstToOsc[noteName, instrumentNum].timeT);
+        noteNameAndInstToOsc.Remove(new Tuple<string, int>(noteName, instrumentNum));
+        int oscNum = noteNameAndInstToOscID[noteName, instrumentNum];
+        oscInUse[oscNum] = false;
 
-        noteNameToOscID.Remove(noteName);
+        noteNameAndInstToOscID.Remove(new Tuple<string, int>(noteName, instrumentNum));
         numPlaying--;
 
         //unpress key in the prefab
@@ -133,10 +153,10 @@ public class SynthController : MonoBehaviour
         key.GetComponent<MeshRenderer>().material = key.name.Contains("b") ? blackKey : whiteKey;
     }
 
-    IEnumerator TurnOffNoteAfterDelay(string noteName, float delay)
+    IEnumerator TurnOffNoteAfterDelay(string noteName, int instrumentNum, float delay)
     {
         yield return new WaitForSeconds(delay);
-        ReleaseOscillatorFromNote(noteName);
+        ReleaseOscillatorFromNote(noteName, instrumentNum);
     }
 
     void UpdateUI(){
@@ -178,15 +198,18 @@ public class SynthController : MonoBehaviour
               break;
           }
       }
-
     }
 
     void CheckForComputerKeyboardAction()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1)) { InstrumentNumber = 0; UpdateUI();}
-        if (Input.GetKeyDown(KeyCode.Alpha2)) { InstrumentNumber = 1; UpdateUI();}
-        if (Input.GetKeyDown(KeyCode.Alpha3)) { InstrumentNumber = 2; UpdateUI();}
-        if (Input.GetKeyDown(KeyCode.Alpha4)) { InstrumentNumber = 3; UpdateUI();}
+        if (vizMode == VisualizationMode.SingleInstrument)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1)) { InstrumentNumber = 0; UpdateUI(); }
+            if (Input.GetKeyDown(KeyCode.Alpha2)) { InstrumentNumber = 1; UpdateUI(); }
+            if (Input.GetKeyDown(KeyCode.Alpha3)) { InstrumentNumber = 2; UpdateUI(); }
+            if (Input.GetKeyDown(KeyCode.Alpha4)) { InstrumentNumber = 3; UpdateUI(); }
+        }
+        
 
         foreach (KeyCode keyName in mt.keyboardPianoMap.Keys)
         {
@@ -196,14 +219,30 @@ public class SynthController : MonoBehaviour
                 int oscNum = GetFirstAvailableOscillatorNum();
                 if (oscNum != -1)
                 {
-                    AssignNoteToOscillator(keyboard_noteName, oscNum, InstrumentNumber);
+                    if (vizMode == VisualizationMode.SingleInstrument)
+                    {
+                        AssignNoteToOscillator(keyboard_noteName, oscNum, InstrumentNumber);
+                    }
+                    else if (vizMode == VisualizationMode.AllInstruments)
+                    {
+                        int rowNum = mt.keyboardRowMap[keyName];
+                        AssignNoteToOscillator(keyboard_noteName, oscNum, rowNum);
+                    }
                     keyPlaying[keyName] = true;
                 }
             }
 
             if (Input.GetKeyUp(keyName) && keyPlaying[keyName])
             {
-                ReleaseOscillatorFromNote(keyboard_noteName);
+                if (vizMode == VisualizationMode.SingleInstrument)
+                {
+                    ReleaseOscillatorFromNote(keyboard_noteName, InstrumentNumber);
+                }
+                else if (vizMode == VisualizationMode.AllInstruments)
+                {
+                    int rowNum = mt.keyboardRowMap[keyName];
+                    ReleaseOscillatorFromNote(keyboard_noteName, rowNum);
+                }               
                 keyPlaying[keyName] = false;
             }
         }
@@ -226,22 +265,22 @@ public class SynthController : MonoBehaviour
 
             if (MidiMaster.GetKeyUp(i) && midi_keyPlaying[i])
             {
-                ReleaseOscillatorFromNote(midi_noteName);
+                ReleaseOscillatorFromNote(midi_noteName, InstrumentNumber);
                 midi_keyPlaying[i] = false;
             }
         }
     }
 
-    public void PlayNote(string noteName)
+    public void PlayNote(string noteName, int instrumentNumber)
     {
-        Note n = new Note(mt.GetNoteFrequency(noteName), volume, instruments[InstrumentNumber]);
-        noteNameToOsc[noteName].PlayNote(n);
+        Note n = new Note(mt.GetNoteFrequency(noteName), volume, instruments[instrumentNumber]);
+        noteNameAndInstToOsc[noteName, instrumentNumber].PlayNote(n);
     }
 
-    public void PlayNote(string noteName, float noteOffDelay)
+    public void PlayNote(string noteName, int instrumentNumber, float noteOffDelay)
     {
-        PlayNote(noteName);
-        IEnumerator delay = TurnOffNoteAfterDelay(noteName, noteOffDelay);
+        PlayNote(noteName, instrumentNumber);
+        IEnumerator delay = TurnOffNoteAfterDelay(noteName, instrumentNumber, noteOffDelay);
         StartCoroutine(delay);
     }
 
@@ -255,6 +294,17 @@ public class SynthController : MonoBehaviour
         return numPlaying;
     }
 
+    public Instrument GetInstrument(int instrumentNum)
+    {
+        return instruments[instrumentNum];
+    }
+
+    public float GetInstrumentTotalLFO(int instrumentNum)
+    {
+        Instrument inst = instruments[instrumentNum];
+        return inst.wave1lfofreq * inst.wave1lfoStrength + inst.wave2lfofreq * inst.wave2lfoStrength + inst.wave3lfofreq * inst.wave3lfoStrength;
+    }
+
     public Instrument CurrentInstrument()
     {
         return instruments[InstrumentNumber];
@@ -265,22 +315,53 @@ public class SynthController : MonoBehaviour
         return InstrumentNumber;
     }
 
-    public void SetCurrentEnvelopeValue(int i, double e)
+    public void SetCurrentEnvelopeValue(int oscNum, double e)
     {
-        currentEnvelopeValues[i] = e;
+        currentEnvelopeValues[oscNum] = e;
     }
 
-    public float CurrentEnvelopeValue()
+    public float CurrentEnvelopeValue(int instrumentNumber)
     {
         int numInUse = 0;
         float total = 0;
         for (int i = 0; i < 8; i++)
         {
-            float e = (float)currentEnvelopeValues[i];
-            total += e;
-            if (e > .0001f) { numInUse++; }
+            if (oscToInstrumentMap[i] == instrumentNumber)
+            {
+                float e = (float)currentEnvelopeValues[i];
+                total += e;
+                if (e > .0001f) { numInUse++; }
+            }            
         }
-        currentEnvelope = total / numInUse;            
-        return currentEnvelope;
+        currentInstrumentEnvelopeValues[instrumentNumber] = total / numInUse;
+        return total / numInUse;
+    }
+
+    public void ResetKeyboard(VisualizationMode mode)
+    {
+        vizMode = mode;
+        if (mode == VisualizationMode.AllInstruments)
+        {
+            mt.SetFullKeyboardPianoMap(ROOTNOTE);
+            
+        }
+        else if (mode == VisualizationMode.SingleInstrument)
+        {
+            mt.SetSingleRowKeyboardPianoMap(ROOTNOTE);
+        }
+        foreach (KeyCode keyName in mt.keyboardPianoMap.Keys)
+        {
+            keyPlaying[keyName] = false;
+        }
+    }
+
+    public int GetOscillatorInstrumentNumber(int oscNum)
+    {
+        return oscToInstrumentMap[oscNum];
+    }
+
+    public bool InstrumentIsPlaying(int instNum)
+    {
+        return instrumentIsPlaying[instNum];
     }
 }

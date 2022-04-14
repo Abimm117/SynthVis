@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: sound object material
-  m_Shader: {fileID: -6465566751694194690, guid: 868e41d8a07f51a4680b8aeaea7c7b9d, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: acfc20a7a9d5572448a8e728d09897f1, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -32,14 +32,14 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - Vector1_5b94fbb7071b4505837f549d4c9a5b61: 5
-    - Vector1_85274e28aaa943b296e7ce304d3e9742: 1
-<<<<<<< HEAD
-    - _scale: 30
-    - _speed: 0.02
-=======
-    - _scale: 0.0040001185
-    - _speed: 0.5
->>>>>>> 116304ad22e8a1d7b9c6f5069df52eedf4c12755
+    - _alpha: 0.32
+    - _blueVal: 1
+    - _brightness: 0.07
+    - _greenVal: 1
+    - _noiseScale: 20
+    - _redVal: 1
+    - _scale: 20
+    - _speed: 0.1
+    - _wobbleSpeed: 0.1
     m_Colors: []
   m_BuildTextureStacks: []

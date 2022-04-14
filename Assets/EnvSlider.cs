@@ -49,27 +49,33 @@ public class EnvSlider : MonoBehaviour
 
     public void ValueChangeCheck()
     {
-      synthInst = synthScript.CurrentInstrument();
+        if (SynthVisualizer.Instance.mode == VisualizationMode.SingleInstrument)
+        {
+            synthInst = synthScript.CurrentInstrument();
+            Debug.Log("!!!!!!!!!!!!!!!!!!!!!!! CHANGING SLIDER");
 
-      switch(role){
-        case "attack":
-          synthInst.attack = mainSlider.value;
-          break;
+            switch (role)
+            {
+                case "attack":
+                    synthInst.attack = mainSlider.value;
+                    break;
 
-        case "decay":
-          synthInst.decay = mainSlider.value;
-          break;
+                case "decay":
+                    synthInst.decay = mainSlider.value;
+                    break;
 
-        case "sustain":
-          synthInst.sustain = mainSlider.value;
-          break;
+                case "sustain":
+                    synthInst.sustain = mainSlider.value;
+                    break;
 
-        case "release":
-          synthInst.release = mainSlider.value;
-          break;
+                case "release":
+                    synthInst.release = mainSlider.value;
+                    break;
 
-        default:
-          break;
-      }
+                default:
+                    break;
+            }
+        }
+      
     }
 }

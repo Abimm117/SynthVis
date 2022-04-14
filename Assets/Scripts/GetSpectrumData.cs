@@ -12,7 +12,7 @@ public class GetSpectrumData : MonoBehaviour
 
     public float[] GetSpectrum()
     {        
-        audioSrc.GetSpectrumData(spectrum, 0, FFTWindow.Blackman);
+        audioSrc.GetSpectrumData(spectrum, 0, FFTWindow.Hanning);
         return spectrum;
     }
 }
