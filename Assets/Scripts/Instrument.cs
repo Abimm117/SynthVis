@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum WaveType { SINE, SQUARE, TRIANGLE, SAWTOOTH};
+public enum WaveType { SINE = 0, SQUARE = 1, TRIANGLE = 2, SAWTOOTH = 3};
+
 public class Instrument : MonoBehaviour
 {
     //TODO:
+
+    // debug LFO, or it is not worth it?
 
     //direct EQ balancing. i think this uses some kind of inverse-FFT to do the following:
     // 1: use FFT to convert sound to frequency hist
@@ -60,17 +63,17 @@ public class Instrument : MonoBehaviour
         return normalizingConstant * (wave1 + wave2 + wave3);
     }
 
-    float Square(float phase)
+    public static float Square(float phase)
     {
         return Mathf.Sin(phase) > 0.0 ? 1.0f : -1.0f;
     }
 
-    float Triangle(float phase)
+    public static float Triangle(float phase)
     {
         return Mathf.Abs((((phase - Mathf.PI/2)/4) % Mathf.PI/2) - Mathf.PI/4) * 8f / Mathf.PI - 1;
     }
 
-    float Sawtooth(float phase)
+    public static float Sawtooth(float phase)
     {
         return 2*((phase + Mathf.PI / 2) / (2 * Mathf.PI) - Mathf.Floor((phase + Mathf.PI / 2) / (2 * Mathf.PI) + 0.5f));
     }

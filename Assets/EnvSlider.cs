@@ -32,7 +32,19 @@ public class EnvSlider : MonoBehaviour
           break;
 
         case "release":
-           mainSlider.value = synthInst.release;
+          mainSlider.value = synthInst.release;
+          break;
+
+        case "freq1":
+          mainSlider.value = synthInst.wave1freq;
+          break;
+
+        case "freq2":
+          mainSlider.value = synthInst.wave2freq;
+          break;
+
+        case "freq3":
+          mainSlider.value = synthInst.wave3freq;
           break;
 
         default:
@@ -52,7 +64,6 @@ public class EnvSlider : MonoBehaviour
         if (SynthVisualizer.Instance.mode == VisualizationMode.SingleInstrument)
         {
             synthInst = synthScript.CurrentInstrument();
-            Debug.Log("!!!!!!!!!!!!!!!!!!!!!!! CHANGING SLIDER");
 
             switch (role)
             {
@@ -72,10 +83,21 @@ public class EnvSlider : MonoBehaviour
                     synthInst.release = mainSlider.value;
                     break;
 
+                case "freq1":
+                    synthInst.wave1freq = mainSlider.value;
+                    break;
+
+                case "freq2":
+                    synthInst.wave2freq = mainSlider.value;
+                    break;
+
+                case "freq3":
+                    synthInst.wave3freq = mainSlider.value;
+                    break;
+
                 default:
                     break;
             }
         }
-      
     }
 }

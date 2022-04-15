@@ -34,10 +34,10 @@ Material:
     m_Floats:
     - _alpha: 0.32
     - _blueVal: 1
-    - _brightness: 0.07
-    - _greenVal: 1
-    - _noiseScale: 20
-    - _redVal: 1
+    - _brightness: 0.5
+    - _greenVal: 0
+    - _noiseScale: 33
+    - _redVal: 0
     - _scale: 20
     - _speed: 0.1
     - _wobbleSpeed: 0.1

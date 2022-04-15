@@ -74,6 +74,7 @@ public class MusicTheory
         keyboardPianoMap.Add(KeyCode.B, notes[root_index[root] + p[4]]);
         keyboardPianoMap.Add(KeyCode.N, notes[root_index[root] + p[5]]);
         keyboardPianoMap.Add(KeyCode.M, notes[root_index[root] + p[6]]);
+        keyboardPianoMap.Add(KeyCode.Comma, notes[root_index[root] + p[7]]);
         keyboardRowMap.Add(KeyCode.Z, 0);
         keyboardRowMap.Add(KeyCode.X, 0);
         keyboardRowMap.Add(KeyCode.C, 0);
@@ -81,6 +82,7 @@ public class MusicTheory
         keyboardRowMap.Add(KeyCode.B, 0);
         keyboardRowMap.Add(KeyCode.N, 0);
         keyboardRowMap.Add(KeyCode.M, 0);
+        keyboardRowMap.Add(KeyCode.Comma, 0);
 
         // middle row of letters
         keyboardPianoMap.Add(KeyCode.A, notes[root_index[root] + p[0]]);
