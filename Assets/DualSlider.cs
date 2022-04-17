@@ -46,5 +46,8 @@ public class DualSlider : MonoBehaviour
 
       synthInst.wave2Strength = limit - mainSlider.value;
 
+
+        synthScript.UpdateWaveMarkers();
+
     }
 }

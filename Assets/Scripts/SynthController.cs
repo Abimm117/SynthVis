@@ -5,25 +5,8 @@ using MidiJack;
 using UnityEngine.UI;
 using System;
 
-public class Dictionary<TKey1, TKey2, TValue> : Dictionary<Tuple<TKey1, TKey2>, TValue>, IDictionary<Tuple<TKey1, TKey2>, TValue>
-{
 
-    public TValue this[TKey1 key1, TKey2 key2]
-    {
-        get { return base[Tuple.Create(key1, key2)]; }
-        set { base[Tuple.Create(key1, key2)] = value; }
-    }
 
-    public void Add(TKey1 key1, TKey2 key2, TValue value)
-    {
-        base.Add(Tuple.Create(key1, key2), value);
-    }
-
-    public bool ContainsKey(TKey1 key1, TKey2 key2)
-    {
-        return base.ContainsKey(Tuple.Create(key1, key2));
-    }
-}
 
 public class SynthController : MonoBehaviour
 {
@@ -47,6 +30,7 @@ public class SynthController : MonoBehaviour
     public Instrument instrument3;
     Instrument[] instruments;
     public int InstrumentNumber = 0;
+    public GameObject[] instrumentControllerMarkers;
 
     double[] currentEnvelopeValues = new double[] { 0, 0, 0, 0, 0, 0, 0, 0 };
     public float[] currentInstrumentEnvelopeValues = new float[4];
@@ -235,6 +219,30 @@ public class SynthController : MonoBehaviour
           break;
         }
       }
+
+        UpdateWaveMarkers();
+
+    }
+
+    public void UpdateWaveMarkers()
+    {
+        // update line renderers from 3 waves to midpoints of the 3 dual-slider sections
+        // let t = a + b + c
+        // position of 1st: a / 2
+        // position of 2nd: a + b/2
+        // position of 3rd: a + b + c / 2
+        LineRenderer lr1 = instrumentControllerMarkers[0].GetComponent<LineRenderer>();
+        Vector3 pos1 = lr1.GetPosition(0);
+        lr1.SetPosition(0, new Vector3(5 + 3 * instruments[InstrumentNumber].wave1Strength, pos1.y, pos1.z));
+        LineRenderer lr2 = instrumentControllerMarkers[1].GetComponent<LineRenderer>();
+        Vector3 pos2 = lr2.GetPosition(0);
+        lr2.SetPosition(0, new Vector3(5 + 3 * instruments[InstrumentNumber].wave1Strength, pos2.y, pos2.z));
+        LineRenderer lr3 = instrumentControllerMarkers[2].GetComponent<LineRenderer>();
+        Vector3 pos3 = lr3.GetPosition(0);
+        lr3.SetPosition(0, new Vector3(8 - 3 * instruments[InstrumentNumber].wave3Strength, pos3.y, pos3.z));
+        LineRenderer lr4 = instrumentControllerMarkers[3].GetComponent<LineRenderer>();
+        Vector3 pos4 = lr4.GetPosition(0);
+        lr4.SetPosition(0, new Vector3(8 - 3 * instruments[InstrumentNumber].wave3Strength, pos4.y, pos4.z));
     }
 
     void CheckForComputerKeyboardAction()
@@ -245,8 +253,7 @@ public class SynthController : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Alpha2)) { InstrumentNumber = 1; UpdateUI(); }
             if (Input.GetKeyDown(KeyCode.Alpha3)) { InstrumentNumber = 2; UpdateUI(); }
             if (Input.GetKeyDown(KeyCode.Alpha4)) { InstrumentNumber = 3; UpdateUI(); }
-        }
-        
+        }       
 
         foreach (KeyCode keyName in mt.keyboardPianoMap.Keys)
         {
@@ -400,5 +407,26 @@ public class SynthController : MonoBehaviour
     public bool InstrumentIsPlaying(int instNum)
     {
         return instrumentIsPlaying[instNum];
+    }
+}
+
+// helper class that we use to lookup an oscillator with 2 keys: 1) the note name (e.g. C3) and 2) the instrument number
+public class Dictionary<TKey1, TKey2, TValue> : Dictionary<Tuple<TKey1, TKey2>, TValue>, IDictionary<Tuple<TKey1, TKey2>, TValue>
+{
+
+    public TValue this[TKey1 key1, TKey2 key2]
+    {
+        get { return base[Tuple.Create(key1, key2)]; }
+        set { base[Tuple.Create(key1, key2)] = value; }
+    }
+
+    public void Add(TKey1 key1, TKey2 key2, TValue value)
+    {
+        base.Add(Tuple.Create(key1, key2), value);
+    }
+
+    public bool ContainsKey(TKey1 key1, TKey2 key2)
+    {
+        return base.ContainsKey(Tuple.Create(key1, key2));
     }
 }
