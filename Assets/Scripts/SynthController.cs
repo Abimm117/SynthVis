@@ -35,6 +35,7 @@ public class SynthController : MonoBehaviour
 
     double[] currentEnvelopeValues = new double[] { 0, 0, 0, 0, 0, 0, 0, 0 };
     public float[] currentInstrumentEnvelopeValues = new float[4];
+    public float[] currentInstrumentGainValues = new float[4];
     bool[] instrumentIsPlaying = new bool[] { false, false, false, false };
 
     public float volume = .5f;
@@ -269,9 +270,7 @@ public class SynthController : MonoBehaviour
         lr3.SetPosition(1, new Vector3(2 + a + d + 0.5f, 0.8f + sustain, pos31.z));
         LineRenderer lr4 = instrumentControllerEnvelopeMarkers[3].GetComponent<LineRenderer>();
         Vector3 pos40 = lr4.GetPosition(0);
-        //Vector3 pos41 = lr4.GetPosition(1);
         lr4.SetPosition(0, new Vector3(2 + a + d + 0.5f, 0.8f + sustain, pos40.z));
-        //lr4.SetPosition(1, new Vector3(2 + a + d + 0.2f + r , 0.8f, pos41.z));
     }
 
     void CheckForComputerKeyboardAction()
@@ -346,7 +345,7 @@ public class SynthController : MonoBehaviour
 
     public void PlayNote(string noteName, int instrumentNumber)
     {
-        Note n = new Note(mt.GetNoteFrequency(noteName), volume, instruments[instrumentNumber]);
+        Note n = new Note(mt.GetNoteFrequency(noteName), volume * currentInstrumentGainValues[instrumentNumber], instruments[instrumentNumber]);
         noteNameAndInstToOsc[noteName, instrumentNumber].PlayNote(n);
     }
 
@@ -436,6 +435,11 @@ public class SynthController : MonoBehaviour
     public bool InstrumentIsPlaying(int instNum)
     {
         return instrumentIsPlaying[instNum];
+    }
+
+    public void SetGain(int instrumentNum, float val)
+    {
+        currentInstrumentGainValues[instrumentNum] = val;
     }
 }
 
