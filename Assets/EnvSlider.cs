@@ -98,6 +98,10 @@ public class EnvSlider : MonoBehaviour
                 default:
                     break;
             }
+
+            synthScript.UpdateEnvelopeMarkers();
         }
+
+        
     }
 }

@@ -59,9 +59,7 @@ public class SynthVisualizer : MonoBehaviour
     bool isPlaying = false;
     List<float[]> currentSpectrumData;
     public GetSpectrumData[] spectra;
-    //public float giniSlowdownMultiplier;
     public float[] currentSpectrumGiniCoeffs = new float[4];
-    //public float[] previousSpectrumGiniCoeffs = new float[4];
     public float[] currentSpectrumCentroids = new float[4];
     public float[] currentSpectrumSpreads = new float[4];
     public float[] currentSpectrumFlatnesses = new float[4];
@@ -82,13 +80,9 @@ public class SynthVisualizer : MonoBehaviour
     public GameObject spectrogram;
     public GameObject plotPointPrefab;
     public float spectrogramHeightShift;
-    //public float waveformPlotZoom;
-    //public float waveformPlot1Zoom;
-    //public float waveformPlot2Zoom;
-    //public float waveformPlot3Zoom;
     public float WaveformZoom;
     public float spectrogramZoom;
-    int numPlotPoints = 1000;
+    int numPlotPoints = 600;
     List<GameObject> points = new List<GameObject>();
     List<GameObject> points1 = new List<GameObject>();
     List<GameObject> points2 = new List<GameObject>();
@@ -139,7 +133,7 @@ public class SynthVisualizer : MonoBehaviour
         float xPos = xmin;
         float xStep = (xmax - xmin) / numPlotPoints;
         GameObject[] auxPlots = new GameObject[] { waveformPlot, waveform1Plot, waveform2Plot, waveform3Plot};
-        List<GameObject>[] pointsLists = new List<GameObject>[] { points, points1, points2, points3 };
+        List<GameObject>[] pointsLists = new List<GameObject>[] { points, points1, points2, points3};
         for (int n = 0; n < auxPlots.Length; n++)
         {
             for (int i = 0; i < numPlotPoints; i++)
@@ -401,12 +395,13 @@ public class SynthVisualizer : MonoBehaviour
     
     void RefreshAuxPlots(int instrumentNum, float envVal)
     {
+        Instrument inst = synthController.GetInstrument(instrumentNum);
+        float synthVal;
         // waveform plot
         for (int n = 0; n < points.Count; n++)
         {
             GameObject go = points[n];
-            float synthVal = synthController.GetInstrument(instrumentNum).CustomSynth(WaveformZoom * go.transform.localPosition.x);               
-                        
+            synthVal = inst.CustomSynth(WaveformZoom * go.transform.localPosition.x);               
 
             // map the synth val, which is between -1 and 1, to a height on the backplate
             // represent the envelope by scaling the waveform amplitude over time
@@ -415,14 +410,15 @@ public class SynthVisualizer : MonoBehaviour
         }
 
         // waveform1 plot
-        WaveType type = synthController.GetInstrument(instrumentNum).wave1type;
-        float freq = synthController.GetInstrument(instrumentNum).wave1freq;
-        float strength = synthController.GetInstrument(instrumentNum).wave1Strength;
+        WaveType type = inst.wave1type;
+        float freq = inst.wave1freq;
+        float strength = inst.wave1Strength;
+        float synthVal1 = 0f;
+        float x;
         for (int n = 0; n < points1.Count; n++)
         {
             GameObject go = points1[n];
-            float synthVal1 = 0f;// = func1(waveformPlotZoom * go.transform.localPosition.x);
-            float x = freq * WaveformZoom * go.transform.localPosition.x;
+            x = freq * WaveformZoom * go.transform.localPosition.x;
             
             switch (type)
             {
@@ -446,7 +442,7 @@ public class SynthVisualizer : MonoBehaviour
         {
             GameObject go = points2[n];
             float synthVal2 = 0f;// = func1(waveformPlotZoom * go.transform.localPosition.x);
-            float x = freq * WaveformZoom * go.transform.localPosition.x;
+            x = freq * WaveformZoom * go.transform.localPosition.x;
             switch (type)
             {
                 case WaveType.SINE: synthVal2 = Mathf.Sin(x); break;
@@ -462,14 +458,15 @@ public class SynthVisualizer : MonoBehaviour
         }
 
         // waveform3 plot
-        type = synthController.GetInstrument(instrumentNum).wave3type;
-        freq = synthController.GetInstrument(instrumentNum).wave3freq;
-        strength = synthController.GetInstrument(instrumentNum).wave3Strength;
+        type = inst.wave3type;
+        freq = inst.wave3freq;
+        strength = inst.wave3Strength;
+        float synthVal3 = 0f;
         for (int n = 0; n < points3.Count; n++)
         {
             GameObject go = points3[n];
-            float synthVal3 = 0f;// = func1(waveformPlotZoom * go.transform.localPosition.x);
-            float x = freq * WaveformZoom * go.transform.localPosition.x;
+            
+            x = freq * WaveformZoom * go.transform.localPosition.x;
             switch (type)
 
             {

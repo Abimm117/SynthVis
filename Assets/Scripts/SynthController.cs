@@ -31,6 +31,7 @@ public class SynthController : MonoBehaviour
     Instrument[] instruments;
     public int InstrumentNumber = 0;
     public GameObject[] instrumentControllerMarkers;
+    public GameObject[] instrumentControllerEnvelopeMarkers;
 
     double[] currentEnvelopeValues = new double[] { 0, 0, 0, 0, 0, 0, 0, 0 };
     public float[] currentInstrumentEnvelopeValues = new float[4];
@@ -221,7 +222,7 @@ public class SynthController : MonoBehaviour
       }
 
         UpdateWaveMarkers();
-
+        UpdateEnvelopeMarkers();
     }
 
     public void UpdateWaveMarkers()
@@ -238,6 +239,39 @@ public class SynthController : MonoBehaviour
         LineRenderer lr4 = instrumentControllerMarkers[3].GetComponent<LineRenderer>();
         Vector3 pos4 = lr4.GetPosition(0);
         lr4.SetPosition(0, new Vector3(8 - 3 * instruments[InstrumentNumber].wave3Strength, pos4.y, pos4.z));
+    }
+
+    public void UpdateEnvelopeMarkers()
+    {
+        Instrument inst = instruments[InstrumentNumber];
+
+        float attack = inst.attack;
+        float decay = inst.decay;
+        float sustain = inst.sustain;
+        float release = inst.release;
+        float total = attack + decay + 0.5f + release;
+
+        float a = inst.attack / total;
+        float d = inst.decay / total;
+        float r = inst.release / total;
+        LineRenderer lr1 = instrumentControllerEnvelopeMarkers[0].GetComponent<LineRenderer>();
+        Vector3 pos1 = lr1.GetPosition(0);
+        lr1.SetPosition(0, new Vector3(2 + a, 1.8f, pos1.z));
+        LineRenderer lr2 = instrumentControllerEnvelopeMarkers[1].GetComponent<LineRenderer>();
+        Vector3 pos20 = lr2.GetPosition(0);
+        Vector3 pos21 = lr2.GetPosition(1);
+        lr2.SetPosition(0, new Vector3(2 + a, 1.8f, pos20.z));
+        lr2.SetPosition(1, new Vector3(2 + a + d, 0.8f + sustain, pos21.z));
+        LineRenderer lr3 = instrumentControllerEnvelopeMarkers[2].GetComponent<LineRenderer>();
+        Vector3 pos30 = lr3.GetPosition(0);
+        Vector3 pos31 = lr3.GetPosition(1);
+        lr3.SetPosition(0, new Vector3(2 + a + d, 0.8f + sustain, pos30.z));
+        lr3.SetPosition(1, new Vector3(2 + a + d + 0.5f, 0.8f + sustain, pos31.z));
+        LineRenderer lr4 = instrumentControllerEnvelopeMarkers[3].GetComponent<LineRenderer>();
+        Vector3 pos40 = lr4.GetPosition(0);
+        //Vector3 pos41 = lr4.GetPosition(1);
+        lr4.SetPosition(0, new Vector3(2 + a + d + 0.5f, 0.8f + sustain, pos40.z));
+        //lr4.SetPosition(1, new Vector3(2 + a + d + 0.2f + r , 0.8f, pos41.z));
     }
 
     void CheckForComputerKeyboardAction()
