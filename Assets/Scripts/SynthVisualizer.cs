@@ -230,7 +230,7 @@ public class SynthVisualizer : MonoBehaviour
         currentNoises[soundNum] = Mathf.Pow(envVal, noiseEnvelopeExponent) * noiseMultiplierGINI * Mathf.Pow(1f - currentSpectrumGiniCoeffs[soundNum], noiseExponentGINI);
         currentBrightnesses[soundNum] = centroidMultiplier * FreqToMel(currentSpectrumCentroids[soundNum]);
         currentSpeeds[soundNum] = .1f;//synthController.GetInstrumentTotalLFO(soundNum);
-        currentAlphas[soundNum] = Mathf.Max(.2f, 1 - alphaMultiplier*currentBrightnesses[soundNum]); // max 1 (opaque), min .2 (mostly transparent)
+        currentAlphas[soundNum] = Mathf.Max(.2f, 1 - alphaMultiplier*currentBrightnesses[soundNum]);
         Vector3 color = ColorOfInstrument(soundNum);
         Material mat;
         Vector3 scale;
@@ -251,7 +251,7 @@ public class SynthVisualizer : MonoBehaviour
         mat.SetFloat("_greenVal", color.y);
         mat.SetFloat("_blueVal", color.z);
         mat.SetFloat("_alpha", currentAlphas[soundNum]);
-        go.transform.localScale = Mathf.Pow(envVal, 2) * scale;
+        go.transform.localScale = Mathf.Pow(envVal, 2) * synthController.currentInstrumentGainValues[soundNum] * scale;
     }
 
     void UpdateAllInstrumentPlot()
