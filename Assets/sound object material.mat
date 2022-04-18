@@ -32,11 +32,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _alpha: 0.32
+    - _alpha: 1
     - _blueVal: 1
     - _brightness: 0.5
     - _greenVal: 0
-    - _noiseScale: 33
+    - _noiseScale: 20
     - _redVal: 0
     - _scale: 20
     - _speed: 0.1

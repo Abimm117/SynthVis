@@ -226,11 +226,6 @@ public class SynthController : MonoBehaviour
 
     public void UpdateWaveMarkers()
     {
-        // update line renderers from 3 waves to midpoints of the 3 dual-slider sections
-        // let t = a + b + c
-        // position of 1st: a / 2
-        // position of 2nd: a + b/2
-        // position of 3rd: a + b + c / 2
         LineRenderer lr1 = instrumentControllerMarkers[0].GetComponent<LineRenderer>();
         Vector3 pos1 = lr1.GetPosition(0);
         lr1.SetPosition(0, new Vector3(5 + 3 * instruments[InstrumentNumber].wave1Strength, pos1.y, pos1.z));

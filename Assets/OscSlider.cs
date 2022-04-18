@@ -8,12 +8,13 @@ public class OscSlider : MonoBehaviour
     public GameObject vis;
     private SynthVisualizer visScript;
     public Slider slider;
+    //public int waveformPlotNum;
     // Start is called before the first frame update
     void Start()
     {
 
       visScript = vis.GetComponent<SynthVisualizer>();
-      slider.value = visScript.waveformPlotZoom;
+      slider.value = visScript.WaveformZoom;
       slider.onValueChanged.AddListener (delegate {ValueChangeCheck ();});
     }
 
@@ -24,6 +25,7 @@ public class OscSlider : MonoBehaviour
     }
 
     public void ValueChangeCheck(){
-      visScript.waveformPlotZoom = slider.value;
+      visScript.WaveformZoom = slider.value;
+
     }
 }

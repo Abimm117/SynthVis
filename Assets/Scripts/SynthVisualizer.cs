@@ -40,11 +40,14 @@ public class SynthVisualizer : MonoBehaviour
     // sound visualization settings
     public bool refreshAux = false;
     public float refreshSpeed;
-    public float noiseMultiplier;
-    public float noiseExponent;
+    public float noiseMultiplierGINI;
+    public float noiseExponentGINI;
+    public float noiseMultiplierFLATNESS;
+    public float noiseExponentFLATNESS;
     public float noiseEnvelopeExponent;
     public float centroidMultiplier;
     public float wobbleMultiplier;
+    public float alphaMultiplier;
     public string Instrument1Color;
     public string Instrument2Color;
     public string Instrument3Color;
@@ -66,6 +69,7 @@ public class SynthVisualizer : MonoBehaviour
     public float[] currentNoises = new float[4];
     public float[] currentBrightnesses = new float[4];
     public float[] currentSpeeds = new float[4];
+    public float[] currentAlphas = new float[4];
     
     int nSpectrum = 8192;
     List<float> frequencyHz;    
@@ -78,7 +82,11 @@ public class SynthVisualizer : MonoBehaviour
     public GameObject spectrogram;
     public GameObject plotPointPrefab;
     public float spectrogramHeightShift;
-    public float waveformPlotZoom;
+    //public float waveformPlotZoom;
+    //public float waveformPlot1Zoom;
+    //public float waveformPlot2Zoom;
+    //public float waveformPlot3Zoom;
+    public float WaveformZoom;
     public float spectrogramZoom;
     int numPlotPoints = 1000;
     List<GameObject> points = new List<GameObject>();
@@ -101,7 +109,7 @@ public class SynthVisualizer : MonoBehaviour
         singleSoundMaterial = singleSound.transform.GetComponent<Renderer>().material;
     }
 
-    Vector3 ColorStringToRGB(int instrumentNum)
+    Vector3 ColorOfInstrument(int instrumentNum)
     {
         switch (instrumentColors[instrumentNum])
         {
@@ -119,6 +127,7 @@ public class SynthVisualizer : MonoBehaviour
 
     private void Awake()
     {
+        //WaveformZooms = new float[] { waveformPlotZoom, waveformPlot1Zoom, waveformPlot2Zoom, waveformPlot3Zoom };
         instrumentColors = new string[] { Instrument1Color, Instrument2Color, Instrument3Color, Instrument4Color };
         if (Instance != null && Instance != this)
         {
@@ -223,10 +232,12 @@ public class SynthVisualizer : MonoBehaviour
         
         go.SetActive(true);
         //float gini = giniSlowdownMultiplier * currentSpectrumGiniCoeffs[soundNum] + (1 - giniSlowdownMultiplier) * previousSpectrumGiniCoeffs[soundNum];
-        currentNoises[soundNum] = Mathf.Pow(envVal, noiseEnvelopeExponent) * noiseMultiplier * Mathf.Pow(1f - currentSpectrumGiniCoeffs[soundNum], noiseExponent);
+        //currentNoises[soundNum] = Mathf.Pow(envVal, noiseEnvelopeExponent) * noiseMultiplierFLATNESS * Mathf.Pow(1f - currentSpectrumFlatnesses[soundNum], noiseExponentFLATNESS);
+        currentNoises[soundNum] = Mathf.Pow(envVal, noiseEnvelopeExponent) * noiseMultiplierGINI * Mathf.Pow(1f - currentSpectrumGiniCoeffs[soundNum], noiseExponentGINI);
         currentBrightnesses[soundNum] = centroidMultiplier * FreqToMel(currentSpectrumCentroids[soundNum]);
         currentSpeeds[soundNum] = .1f;//synthController.GetInstrumentTotalLFO(soundNum);
-        Vector3 color = ColorStringToRGB(soundNum);
+        currentAlphas[soundNum] = Mathf.Max(.2f, 1 - alphaMultiplier*currentBrightnesses[soundNum]); // max 1 (opaque), min .2 (mostly transparent)
+        Vector3 color = ColorOfInstrument(soundNum);
         Material mat;
         Vector3 scale;
         if (isSingleSound)
@@ -245,6 +256,7 @@ public class SynthVisualizer : MonoBehaviour
         mat.SetFloat("_redVal", color.x);
         mat.SetFloat("_greenVal", color.y);
         mat.SetFloat("_blueVal", color.z);
+        mat.SetFloat("_alpha", currentAlphas[soundNum]);
         go.transform.localScale = Mathf.Pow(envVal, 2) * scale;
     }
 
@@ -346,6 +358,7 @@ public class SynthVisualizer : MonoBehaviour
                     //Array.Copy(currentSpectrumGiniCoeffs, previousSpectrumGiniCoeffs, 4);
 
                     //sort current spectrum data to calculate gini coefficient
+                    
                     Array.Sort(currentSpectrumData[instrumentNum]);
                     float giniSum0 = 0f;
                     float giniSum1 = 0f;
@@ -355,7 +368,7 @@ public class SynthVisualizer : MonoBehaviour
                         giniSum1 += currentSpectrumData[instrumentNum][i];
                     }
                     currentSpectrumGiniCoeffs[instrumentNum] = (1f / nSpectrum) * (nSpectrum + 1 - 2 * (giniSum0 / giniSum1)); // (nSpectrum + 1 - 2 * (giniSum0 / giniSum1));
-                               
+                              
                     /*
                     //calculate spectrum spread
                     float spreadSum = 0f;
@@ -366,7 +379,9 @@ public class SynthVisualizer : MonoBehaviour
                         spreadSum += p * Mathf.Pow((f - currentSpectrumCentroids[instrumentNum]), 2);
                     }
                     currentSpectrumSpreads[instrumentNum] = Mathf.Sqrt(spreadSum);
+                    */
 
+                    /*
                     //calculate spectrum flatness
                     float flatnessProduct = 0f;
                     float flatnessSum = 0f;
@@ -390,7 +405,7 @@ public class SynthVisualizer : MonoBehaviour
         for (int n = 0; n < points.Count; n++)
         {
             GameObject go = points[n];
-            float synthVal = synthController.GetInstrument(instrumentNum).CustomSynth(waveformPlotZoom * go.transform.localPosition.x);               
+            float synthVal = synthController.GetInstrument(instrumentNum).CustomSynth(WaveformZoom * go.transform.localPosition.x);               
                         
 
             // map the synth val, which is between -1 and 1, to a height on the backplate
@@ -407,13 +422,14 @@ public class SynthVisualizer : MonoBehaviour
         {
             GameObject go = points1[n];
             float synthVal1 = 0f;// = func1(waveformPlotZoom * go.transform.localPosition.x);
+            float x = freq * WaveformZoom * go.transform.localPosition.x;
             
             switch (type)
             {
-                case WaveType.SINE: synthVal1 = Mathf.Sin(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.SQUARE: synthVal1 = Instrument.Square(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.TRIANGLE: synthVal1 = Instrument.Triangle(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.SAWTOOTH: synthVal1 = Instrument.Sawtooth(freq * waveformPlotZoom * go.transform.localPosition.x); break;
+                case WaveType.SINE: synthVal1 = Mathf.Sin(x); break;
+                case WaveType.SQUARE: synthVal1 = Instrument.Square(x); break;
+                case WaveType.TRIANGLE: synthVal1 = Instrument.Triangle(x); break;
+                case WaveType.SAWTOOTH: synthVal1 = Instrument.Sawtooth(x); break;
             }
 
             // map the synth val, which is between -1 and 1, to a height on the backplate
@@ -430,13 +446,13 @@ public class SynthVisualizer : MonoBehaviour
         {
             GameObject go = points2[n];
             float synthVal2 = 0f;// = func1(waveformPlotZoom * go.transform.localPosition.x);
-            
+            float x = freq * WaveformZoom * go.transform.localPosition.x;
             switch (type)
             {
-                case WaveType.SINE: synthVal2 = Mathf.Sin(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.SQUARE: synthVal2 = Instrument.Square(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.TRIANGLE: synthVal2 = Instrument.Triangle(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.SAWTOOTH: synthVal2 = Instrument.Sawtooth(freq * waveformPlotZoom * go.transform.localPosition.x); break;
+                case WaveType.SINE: synthVal2 = Mathf.Sin(x); break;
+                case WaveType.SQUARE: synthVal2 = Instrument.Square(x); break;
+                case WaveType.TRIANGLE: synthVal2 = Instrument.Triangle(x); break;
+                case WaveType.SAWTOOTH: synthVal2 = Instrument.Sawtooth(x); break;
             }
 
             // map the synth val, which is between -1 and 1, to a height on the backplate
@@ -453,12 +469,14 @@ public class SynthVisualizer : MonoBehaviour
         {
             GameObject go = points3[n];
             float synthVal3 = 0f;// = func1(waveformPlotZoom * go.transform.localPosition.x);
+            float x = freq * WaveformZoom * go.transform.localPosition.x;
             switch (type)
+
             {
-                case WaveType.SINE: synthVal3 = Mathf.Sin(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.SQUARE: synthVal3 = Instrument.Square(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.TRIANGLE: synthVal3 = Instrument.Triangle(freq * waveformPlotZoom * go.transform.localPosition.x); break;
-                case WaveType.SAWTOOTH: synthVal3 = Instrument.Sawtooth(freq * waveformPlotZoom * go.transform.localPosition.x); break;
+                case WaveType.SINE: synthVal3 = Mathf.Sin(x); break;
+                case WaveType.SQUARE: synthVal3 = Instrument.Square(x); break;
+                case WaveType.TRIANGLE: synthVal3 = Instrument.Triangle(x); break;
+                case WaveType.SAWTOOTH: synthVal3 = Instrument.Sawtooth(x); break;
             }
 
             // map the synth val, which is between -1 and 1, to a height on the backplate
@@ -486,6 +504,16 @@ public class SynthVisualizer : MonoBehaviour
             }
 
         }*/
+    }
+
+    public float GetWaveformZoom()
+    {
+        return WaveformZoom;
+    }
+
+    public void SetWaveformZoom(float f)
+    {
+        WaveformZoom = f;
     }
     
 }
