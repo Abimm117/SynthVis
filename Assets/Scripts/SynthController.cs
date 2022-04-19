@@ -5,9 +5,6 @@ using MidiJack;
 using UnityEngine.UI;
 using System;
 
-
-
-
 public class SynthController : MonoBehaviour
 {
     #region define objects
@@ -146,132 +143,6 @@ public class SynthController : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         ReleaseOscillatorFromNote(noteName, instrumentNum);
-    }
-
-    public void UpdateUI(){
-      Instrument inst = CurrentInstrument();
-      float a = inst.wave1Strength;
-      float b = inst.wave2Strength;
-      float c = inst.wave3Strength;
-      float t = a + b + c;
-
-      forwardDualStrength.GetComponent<Slider>().value = a / t;
-      backwardDualStrength.GetComponent<Slider>().value = c / t;
-
-      forwardDualStrength.GetComponent<DualSlider>().limit = 1 - c;
-      backwardDualStrength.GetComponent<DualSlider>().limit = 1 - a;
-
-      foreach(GameObject g in sliders)
-      {
-          EnvSlider gScript = g.GetComponent<EnvSlider>();
-          Slider gSlider = g.GetComponent<Slider>();
-
-          switch(gScript.role){
-            case "attack":
-              gSlider.value = inst.attack;
-              break;
-
-            case "decay":
-              gSlider.value = inst.decay;
-              break;
-
-            case "sustain":
-              gSlider.value = inst.sustain;
-              break;
-
-            case "release":
-               gSlider.value = inst.release;
-              break;
-
-            case "freq1":
-              gSlider.value = inst.wave1freq;
-              break;
-
-            case "freq2":
-              gSlider.value = inst.wave2freq;
-              break;
-
-            case "freq3":
-              gSlider.value = inst.wave3freq;
-              break;
-
-            default:
-              break;
-          }
-      }
-      instDrop.value = InstrumentNumber;
-
-      foreach(GameObject g in waveDrops){
-        InstSlideScript scrpt = g.GetComponent<InstSlideScript>();
-        Dropdown drop = g.GetComponent<Dropdown>();
-        switch(scrpt.wave)
-        {
-          case 1:
-            drop.value = (int) inst.wave1type;
-          break;
-
-          case 2:
-            drop.value = (int) inst.wave2type;
-          break;
-
-          case 3:
-            drop.value = (int) inst.wave3type;
-          break;
-
-          default:
-          break;
-        }
-      }
-
-        UpdateWaveMarkers();
-        UpdateEnvelopeMarkers();
-    }
-
-    public void UpdateWaveMarkers()
-    {
-        LineRenderer lr1 = instrumentControllerMarkers[0].GetComponent<LineRenderer>();
-        Vector3 pos1 = lr1.GetPosition(0);
-        lr1.SetPosition(0, new Vector3(5 + 3 * instruments[InstrumentNumber].wave1Strength, pos1.y, pos1.z));
-        LineRenderer lr2 = instrumentControllerMarkers[1].GetComponent<LineRenderer>();
-        Vector3 pos2 = lr2.GetPosition(0);
-        lr2.SetPosition(0, new Vector3(5 + 3 * instruments[InstrumentNumber].wave1Strength, pos2.y, pos2.z));
-        LineRenderer lr3 = instrumentControllerMarkers[2].GetComponent<LineRenderer>();
-        Vector3 pos3 = lr3.GetPosition(0);
-        lr3.SetPosition(0, new Vector3(8 - 3 * instruments[InstrumentNumber].wave3Strength, pos3.y, pos3.z));
-        LineRenderer lr4 = instrumentControllerMarkers[3].GetComponent<LineRenderer>();
-        Vector3 pos4 = lr4.GetPosition(0);
-        lr4.SetPosition(0, new Vector3(8 - 3 * instruments[InstrumentNumber].wave3Strength, pos4.y, pos4.z));
-    }
-
-    public void UpdateEnvelopeMarkers()
-    {
-        Instrument inst = instruments[InstrumentNumber];
-
-        float attack = inst.attack;
-        float decay = inst.decay;
-        float sustain = inst.sustain;
-        float release = inst.release;
-        float total = attack + decay + 0.5f + release;
-
-        float a = inst.attack / total;
-        float d = inst.decay / total;
-        float r = inst.release / total;
-        LineRenderer lr1 = instrumentControllerEnvelopeMarkers[0].GetComponent<LineRenderer>();
-        Vector3 pos1 = lr1.GetPosition(0);
-        lr1.SetPosition(0, new Vector3(2 + a, 1.8f, pos1.z));
-        LineRenderer lr2 = instrumentControllerEnvelopeMarkers[1].GetComponent<LineRenderer>();
-        Vector3 pos20 = lr2.GetPosition(0);
-        Vector3 pos21 = lr2.GetPosition(1);
-        lr2.SetPosition(0, new Vector3(2 + a, 1.8f, pos20.z));
-        lr2.SetPosition(1, new Vector3(2 + a + d, 0.8f + sustain, pos21.z));
-        LineRenderer lr3 = instrumentControllerEnvelopeMarkers[2].GetComponent<LineRenderer>();
-        Vector3 pos30 = lr3.GetPosition(0);
-        Vector3 pos31 = lr3.GetPosition(1);
-        lr3.SetPosition(0, new Vector3(2 + a + d, 0.8f + sustain, pos30.z));
-        lr3.SetPosition(1, new Vector3(2 + a + d + 0.5f, 0.8f + sustain, pos31.z));
-        LineRenderer lr4 = instrumentControllerEnvelopeMarkers[3].GetComponent<LineRenderer>();
-        Vector3 pos40 = lr4.GetPosition(0);
-        lr4.SetPosition(0, new Vector3(2 + a + d + 0.5f, 0.8f + sustain, pos40.z));
     }
 
     void CheckForComputerKeyboardAction()
@@ -450,6 +321,141 @@ public class SynthController : MonoBehaviour
                 osc[i].SetGain(val);
             }
         }
+    }
+
+    public void UpdateUI()
+    {
+        Instrument inst = CurrentInstrument();
+        float a = inst.wave1Strength;
+        float b = inst.wave2Strength;
+        float c = inst.wave3Strength;
+        float t = a + b + c;
+
+        forwardDualStrength.GetComponent<Slider>().value = a / t;
+        backwardDualStrength.GetComponent<Slider>().value = c / t;
+
+        forwardDualStrength.GetComponent<DualSlider>().limit = 1 - c;
+        backwardDualStrength.GetComponent<DualSlider>().limit = 1 - a;
+
+        foreach (GameObject g in sliders)
+        {
+            EnvSlider gScript = g.GetComponent<EnvSlider>();
+            Slider gSlider = g.GetComponent<Slider>();
+
+            switch (gScript.role)
+            {
+                case "attack":
+                    gSlider.value = inst.attack;
+                    break;
+
+                case "decay":
+                    gSlider.value = inst.decay;
+                    break;
+
+                case "sustain":
+                    gSlider.value = inst.sustain;
+                    break;
+
+                case "release":
+                    gSlider.value = inst.release;
+                    break;
+
+                case "freq1":
+                    gSlider.value = inst.wave1freq;
+                    break;
+
+                case "freq2":
+                    gSlider.value = inst.wave2freq;
+                    break;
+
+                case "freq3":
+                    gSlider.value = inst.wave3freq;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        instDrop.value = InstrumentNumber;
+
+        foreach (GameObject g in waveDrops)
+        {
+            InstSlideScript scrpt = g.GetComponent<InstSlideScript>();
+            Dropdown drop = g.GetComponent<Dropdown>();
+            switch (scrpt.wave)
+            {
+                case 1:
+                    drop.value = (int)inst.wave1type;
+                    break;
+
+                case 2:
+                    drop.value = (int)inst.wave2type;
+                    break;
+
+                case 3:
+                    drop.value = (int)inst.wave3type;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        UpdateWaveMarkers();
+        UpdateEnvelopeMarkers();
+    }
+
+    public void UpdateWaveMarkers()
+    {
+        LineRenderer lr1 = instrumentControllerMarkers[0].GetComponent<LineRenderer>();
+        Vector3 pos1 = lr1.GetPosition(0);
+        lr1.SetPosition(0, new Vector3(5 + 3 * instruments[InstrumentNumber].wave1Strength, pos1.y, pos1.z));
+        LineRenderer lr2 = instrumentControllerMarkers[1].GetComponent<LineRenderer>();
+        Vector3 pos2 = lr2.GetPosition(0);
+        lr2.SetPosition(0, new Vector3(5 + 3 * instruments[InstrumentNumber].wave1Strength, pos2.y, pos2.z));
+        LineRenderer lr3 = instrumentControllerMarkers[2].GetComponent<LineRenderer>();
+        Vector3 pos3 = lr3.GetPosition(0);
+        lr3.SetPosition(0, new Vector3(8 - 3 * instruments[InstrumentNumber].wave3Strength, pos3.y, pos3.z));
+        LineRenderer lr4 = instrumentControllerMarkers[3].GetComponent<LineRenderer>();
+        Vector3 pos4 = lr4.GetPosition(0);
+        lr4.SetPosition(0, new Vector3(8 - 3 * instruments[InstrumentNumber].wave3Strength, pos4.y, pos4.z));
+    }
+
+    public void UpdateEnvelopeMarkers()
+    {
+        Instrument inst = instruments[InstrumentNumber];
+
+        float attack = inst.attack;
+        float decay = inst.decay;
+        float sustain = inst.sustain;
+        float sustainRenderLength = 0.3f;
+        float release = inst.release;
+        float total = attack + decay + sustainRenderLength + release;
+
+        float xLeft = 2f;
+        float yUp = 1.8f;
+        float yDown = 0.8f;
+
+
+        float a = inst.attack / total;
+        float d = inst.decay / total;
+        float r = inst.release / total;
+        LineRenderer lr1 = instrumentControllerEnvelopeMarkers[0].GetComponent<LineRenderer>();
+        Vector3 pos1 = lr1.GetPosition(0);
+        lr1.SetPosition(0, new Vector3(xLeft + a, yUp, pos1.z));
+        LineRenderer lr2 = instrumentControllerEnvelopeMarkers[1].GetComponent<LineRenderer>();
+        Vector3 pos20 = lr2.GetPosition(0);
+        Vector3 pos21 = lr2.GetPosition(1);
+        lr2.SetPosition(0, new Vector3(xLeft + a, yUp, pos20.z));
+        lr2.SetPosition(1, new Vector3(xLeft + a + d, yDown + sustain, pos21.z));
+        LineRenderer lr3 = instrumentControllerEnvelopeMarkers[2].GetComponent<LineRenderer>();
+        Vector3 pos30 = lr3.GetPosition(0);
+        Vector3 pos31 = lr3.GetPosition(1);
+        lr3.SetPosition(0, new Vector3(xLeft + a + d, yDown + sustain, pos30.z));
+        lr3.SetPosition(1, new Vector3(xLeft + a + d + sustainRenderLength, yDown + sustain, pos31.z));
+        LineRenderer lr4 = instrumentControllerEnvelopeMarkers[3].GetComponent<LineRenderer>();
+        Vector3 pos40 = lr4.GetPosition(0);
+        lr4.SetPosition(0, new Vector3(xLeft + a + d + sustainRenderLength, yDown + sustain, pos40.z));
     }
 }
 
