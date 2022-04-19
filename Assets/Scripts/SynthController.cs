@@ -63,6 +63,7 @@ public class SynthController : MonoBehaviour
         for (int i = 0; i < numOscillators; i++)
         {
             osc[i] = sounds[i].transform.GetComponent<Oscillator>();
+            osc[i].gain = volume;
             osc[i].SetInstrument(instrument0, this, i);
             audioSource[i] = sounds[i].transform.GetComponent<AudioSource>();
             audioSource[i].Play();
@@ -345,8 +346,10 @@ public class SynthController : MonoBehaviour
 
     public void PlayNote(string noteName, int instrumentNumber)
     {
-        Note n = new Note(mt.GetNoteFrequency(noteName), volume * currentInstrumentGainValues[instrumentNumber], instruments[instrumentNumber]);
-        noteNameAndInstToOsc[noteName, instrumentNumber].PlayNote(n);
+        Oscillator o = noteNameAndInstToOsc[noteName, instrumentNumber];
+        o.SetGain(currentInstrumentGainValues[instrumentNumber]);
+        Note n = new Note(mt.GetNoteFrequency(noteName), instruments[instrumentNumber]);
+        o.PlayNote(n);
     }
 
     public void PlayNote(string noteName, int instrumentNumber, float noteOffDelay)
@@ -440,6 +443,13 @@ public class SynthController : MonoBehaviour
     public void SetGain(int instrumentNum, float val)
     {
         currentInstrumentGainValues[instrumentNum] = val;
+        for (int i = 0; i < 8; i++)
+        {
+            if (oscToInstrumentMap[i] == instrumentNum)
+            {
+                osc[i].SetGain(val);
+            }
+        }
     }
 }
 

@@ -13,6 +13,7 @@ public class Oscillator : MonoBehaviour
     private double sampling_frequency = 44100.0;
     Instrument instrument;
     public float gain;
+    float savedGain;
     public double frequency;
     public SoundEnvelope env;
     double savedEnv = 0;
@@ -23,6 +24,11 @@ public class Oscillator : MonoBehaviour
     SynthController synthController;
     int idNum;
     #endregion
+
+    private void Start()
+    {
+        savedGain = gain;
+    }
 
     private void Update()
     {
@@ -36,6 +42,11 @@ public class Oscillator : MonoBehaviour
         idNum = i;
     }
 
+    public void SetGain(float gainMult)
+    {
+        gain = savedGain * gainMult;
+    }
+
     public void SetEnvelope(Instrument inst)
     {
         env.attackTime = inst.attack;
@@ -46,7 +57,7 @@ public class Oscillator : MonoBehaviour
 
     public void PlayNote(Note n)
     {
-        gain = n.volume;
+        //gain = n.volume;
         frequency = n.frequency;
         instrument = n.instrument;
         env.noteOn(timeT);
