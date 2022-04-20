@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
+//using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class MusicTheory
@@ -66,7 +66,7 @@ public class MusicTheory
         List<int> p = new List<int> { 0, 2, 4, 5, 7, 9, 11, 12, 14, 16 };
 
         // bottom row of letters
-        
+
         keyboardPianoMap.Add(KeyCode.Z, notes[root_index[root] + p[0]]);
         keyboardPianoMap.Add(KeyCode.X, notes[root_index[root] + p[1]]);
         keyboardPianoMap.Add(KeyCode.C, notes[root_index[root] + p[2]]);
