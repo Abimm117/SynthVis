@@ -6,7 +6,7 @@ using System.Linq;
 using System.IO;
 using TMPro;
 
-public enum VisualizationMode { SingleInstrument, AllInstruments}
+public enum VisualizationMode { SingleInstrument, AllInstruments, Clip}
 
 public class SynthVisualizer : MonoBehaviour
 {
@@ -22,6 +22,7 @@ public class SynthVisualizer : MonoBehaviour
     // main plots
     public GameObject allInstrumentPlot;
     public GameObject singleInstrumentPlot;
+    public GameObject clipPlot;
 
     // all instrument plot
     public GameObject[] allSoundObjects;
@@ -176,6 +177,7 @@ public class SynthVisualizer : MonoBehaviour
                 UpdateAllInstrumentPlot();
                 if (savedMode != mode)
                 {
+                    clipPlot.SetActive(false);
                     singleInstrumentPlot.SetActive(false);
                     allInstrumentPlot.SetActive(true);
                     synthController.ResetKeyboard(mode);
@@ -186,10 +188,17 @@ public class SynthVisualizer : MonoBehaviour
                 UpdateSingleInstrumentPlot();
                 if (savedMode != mode)
                 {
+                    clipPlot.SetActive(false);
                     singleInstrumentPlot.SetActive(true);
                     allInstrumentPlot.SetActive(false);
                     synthController.ResetKeyboard(mode);
                 }
+            }
+            else
+            {
+                clipPlot.SetActive(true);
+                singleInstrumentPlot.SetActive(false);
+                allInstrumentPlot.SetActive(false);
             }
             savedMode = mode;
         }
