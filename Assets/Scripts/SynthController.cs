@@ -119,7 +119,10 @@ public class SynthController : MonoBehaviour
         Vector3 _p = transform.Find("Keys/Note" + noteName).localPosition;
         Transform key = transform.Find("Keys/Note" + noteName);
         key.localPosition = new Vector3(_p[0] - 0.04f, _p[1], _p[2]);
+        Vector3 c = SynthVisualizer.Instance.ColorOfInstrument(instrumentNum);
+        //highlightKey.color = new Color(c.x, c.y, c.z);
         key.GetComponent<MeshRenderer>().material = highlightKey;
+        key.GetComponent<Renderer>().material.color = new Color(c.x, c.y, c.z);
     }
 
     void ReleaseOscillatorFromNote(string noteName, int instrumentNum)

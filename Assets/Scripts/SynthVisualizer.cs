@@ -6,7 +6,7 @@ using System.Linq;
 using System.IO;
 using TMPro;
 
-public enum VisualizationMode { SingleInstrument, AllInstruments, Clip}
+public enum VisualizationMode { SingleInstrument, AllInstruments, Clip, None}
 
 public class SynthVisualizer : MonoBehaviour
 {
@@ -14,6 +14,8 @@ public class SynthVisualizer : MonoBehaviour
     #region define objects
     public VisualizationMode mode;
     VisualizationMode savedMode;
+
+    public bool soundObjectOn;
 
     // time
     float timeT = 0f;
@@ -27,7 +29,7 @@ public class SynthVisualizer : MonoBehaviour
     // all instrument plot
     public GameObject[] allSoundObjects;
     Vector3 savedObjectScaleAll;
-    public GameObject[] allSoundMarkers;
+    //public GameObject[] allSoundMarkers;
     Material[] allSoundMaterials;
 
     // single instrument plot
@@ -71,33 +73,47 @@ public class SynthVisualizer : MonoBehaviour
     public float[] currentAlphas = new float[4];
     
     int nSpectrum = 8192;
-    List<float> frequencyHz;    
-
+    List<float> frequencyHz; 
+    
+    /////////////////////////////////////////////////////////////////////////
     // auxiliary plots
+
+    // single instrument view auxiliary plots
     public GameObject mainwaveformPlot;
     public GameObject waveform1Plot;
     public GameObject waveform2Plot;
     public GameObject waveform3Plot;
     public GameObject spectrogram;
-    public GameObject plotPointPrefab;
-    //public float spectrogramHeightShift;
-    public float WaveformZoom;
-    //public float spectrogramZoom;
-    int numPlotPoints = 800;
     List<GameObject> mainWaveformPoints = new List<GameObject>();
     List<GameObject> waveform1Points = new List<GameObject>();
     List<GameObject> waveform2Points = new List<GameObject>();
     List<GameObject> waveform3Points = new List<GameObject>();
     List<GameObject> spectrogramBars = new List<GameObject>();
+
+    // all instrument view auxiliary plots
+    public GameObject inst1waveform, inst2waveform, inst3waveform, inst4waveform;
+    public GameObject inst1spec, inst2spec, inst3spec, inst4spec;
+    List<GameObject>[] allInstWaveformPoints, allInstSpecBars;
+    List<GameObject> inst1waveformpoints = new List<GameObject>();
+    List<GameObject> inst2waveformpoints = new List<GameObject>();
+    List<GameObject> inst3waveformpoints = new List<GameObject>();
+    List<GameObject> inst4waveformpoints = new List<GameObject>();
+    List<GameObject> inst1specbars = new List<GameObject>();
+    List<GameObject> inst2specbars = new List<GameObject>();
+    List<GameObject> inst3specbars = new List<GameObject>();
+    List<GameObject> inst4specbars = new List<GameObject>();
+    
+    public GameObject plotPointPrefab;
+    public float WaveformZoom;
+    //public GameObject waveformZoomBar;
+    int numPlotPoints = 800;  
     public Vector3 plotPointLocalScale;
     public Vector3 plotBarLocalScale;
-    //public int spectrogramBarFreqMult;
-    //public int spectrogramBarFreqShift;
-
     float xmin = -5.75f;
     float xmax = 4.25f;
     float ymin = -3f;
     float ymax = 3f;
+    /////////////////////////////////////////////////////////////////////////
 
     #endregion
 
@@ -115,8 +131,37 @@ public class SynthVisualizer : MonoBehaviour
         #region initialize aux plots
         float xPos = xmin;
         float xStep = (xmax - xmin) / numPlotPoints;
-        GameObject[] auxPlots = new GameObject[] { mainwaveformPlot, waveform1Plot, waveform2Plot, waveform3Plot, spectrogram};
-        List<GameObject>[] pointsLists = new List<GameObject>[] { mainWaveformPoints, waveform1Points, waveform2Points, waveform3Points, spectrogramBars};
+        GameObject[] auxPlots = new GameObject[] { 
+            mainwaveformPlot, 
+            waveform1Plot, 
+            waveform2Plot, 
+            waveform3Plot, 
+            spectrogram, 
+            inst1waveform,
+            inst2waveform,
+            inst3waveform,
+            inst4waveform,
+            inst1spec,
+            inst2spec,
+            inst3spec,
+            inst4spec
+        };
+        List<GameObject>[] pointsLists = new List<GameObject>[] { 
+            mainWaveformPoints, 
+            waveform1Points, 
+            waveform2Points, 
+            waveform3Points, 
+            spectrogramBars,
+            inst1waveformpoints,
+            inst2waveformpoints,
+            inst3waveformpoints,
+            inst4waveformpoints,
+            inst1specbars,
+            inst2specbars,
+            inst3specbars,
+            inst4specbars
+        };
+        
         for (int n = 0; n < auxPlots.Length; n++)
         {
             for (int i = 0; i < numPlotPoints; i++)
@@ -126,9 +171,10 @@ public class SynthVisualizer : MonoBehaviour
                 pointsLists[n].Add(go);
                 go.transform.parent = auxPlots[n].transform;
                 go.transform.localPosition = pos;
-                //go.transform.localScale = .05f * Vector3.one;
             }
         }
+        allInstWaveformPoints = new List<GameObject>[] { inst1waveformpoints, inst2waveformpoints, inst3waveformpoints, inst4waveformpoints };
+        allInstSpecBars = new List<GameObject>[] { inst1specbars, inst2specbars, inst3specbars, inst4specbars };
         #endregion
 
         #region initialize sound data
@@ -161,7 +207,7 @@ public class SynthVisualizer : MonoBehaviour
         savedObjectScaleAll = allSoundObjects[0].transform.localScale;
         #endregion
 
-        savedMode = (mode == VisualizationMode.AllInstruments) ? VisualizationMode.SingleInstrument : VisualizationMode.AllInstruments;
+        savedMode = VisualizationMode.None;// (mode == VisualizationMode.AllInstruments) ? VisualizationMode.SingleInstrument : VisualizationMode.AllInstruments;
     }
 
     private void Update()
@@ -180,6 +226,7 @@ public class SynthVisualizer : MonoBehaviour
                     clipPlot.SetActive(false);
                     singleInstrumentPlot.SetActive(false);
                     allInstrumentPlot.SetActive(true);
+                    //waveformZoomBar.transform.localPosition = new Vector3(waveformZoomBar.transform.localPosition.x, 0, waveformZoomBar.transform.localPosition.z);
                     synthController.ResetKeyboard(mode);
                 }                                
             }
@@ -191,6 +238,7 @@ public class SynthVisualizer : MonoBehaviour
                     clipPlot.SetActive(false);
                     singleInstrumentPlot.SetActive(true);
                     allInstrumentPlot.SetActive(false);
+                    //waveformZoomBar.transform.localPosition = new Vector3(waveformZoomBar.transform.localPosition.x, 92, waveformZoomBar.transform.localPosition.z);
                     synthController.ResetKeyboard(mode);
                 }
             }
@@ -214,7 +262,7 @@ public class SynthVisualizer : MonoBehaviour
 
     void UpdateSoundObject(GameObject go, float envVal, int soundNum, bool isSingleSound)
     {       
-        go.SetActive(true);
+        go.SetActive(soundObjectOn);
         currentNoises[soundNum] = Mathf.Pow(envVal, noiseEnvelopeExponent) * noiseMultiplierGINI * Mathf.Pow(1f - currentSpectrumGiniCoeffs[soundNum], noiseExponentGINI);
         currentBrightnesses[soundNum] = centroidMultiplier * FreqToMel(currentSpectrumCentroids[soundNum]);
         currentAlphas[soundNum] = Mathf.Max(.2f, 1 - alphaMultiplier*currentBrightnesses[soundNum]);
@@ -249,13 +297,12 @@ public class SynthVisualizer : MonoBehaviour
             if (float.IsNaN(envVal)) { envVal = .0001f; }
             if (envVal >= .0001f)
             {
-                allSoundMarkers[n].SetActive(true);
                 UpdateSoundObject(allSoundObjects[n], envVal, n, false);
+                if (refreshAux) { RefreshAuxPlots(n, envVal); }
             }
             else
             {
                 allSoundObjects[n].SetActive(false);
-                allSoundMarkers[n].SetActive(false);
             }
         }
     }
@@ -280,7 +327,7 @@ public class SynthVisualizer : MonoBehaviour
         }
     }
 
-    Vector3 ColorOfInstrument(int instrumentNum)
+    public Vector3 ColorOfInstrument(int instrumentNum)
     {
         switch (instrumentColors[instrumentNum])
         {
@@ -381,7 +428,7 @@ public class SynthVisualizer : MonoBehaviour
         GameObject go;
         for (int n = 0; n < p.Count; n++)
         {
-            go = mainWaveformPoints[n];
+            go = p[n];
             synthVal = inst.CustomSynth(WaveformZoom * go.transform.localPosition.x); 
             height = Mathf.Lerp(ymin, ymax, 0.5f * (envVal * synthVal + 1f));
             go.transform.localPosition = new Vector3(go.transform.localPosition.x, height, go.transform.localPosition.z);
@@ -413,14 +460,13 @@ public class SynthVisualizer : MonoBehaviour
         }
     }
 
-    void RefreshSpectrogram(int instrumentNum, float envVal)
+    void RefreshSpectrogram(int instrumentNum, float envVal, List<GameObject> p)
     {
-        // spectrogram plot
         float height;
         GameObject go;
-        for (int n = 0; n < spectrogramBars.Count; n++)
+        for (int n = 0; n < p.Count; n++)
         {
-            go = spectrogramBars[n];
+            go = p[n];
             height = envVal * Mathf.Min(plotBarLocalScale.y * Mathf.Log(1 + currentSpectrumData[instrumentNum][n], 2), 6);
             go.transform.localScale = new Vector3(plotBarLocalScale.x, height, plotBarLocalScale.z);
         }
@@ -429,11 +475,19 @@ public class SynthVisualizer : MonoBehaviour
     void RefreshAuxPlots(int instrumentNum, float envVal)
     {
         Instrument inst = synthController.GetInstrument(instrumentNum);
-        RefreshWaveform(inst, envVal, mainWaveformPoints);
-        RefreshWaveform(inst.wave1type, inst.wave1freq, inst.wave1Strength, envVal, waveform1Points);
-        RefreshWaveform(inst.wave2type, inst.wave2freq, inst.wave2Strength, envVal, waveform2Points);
-        RefreshWaveform(inst.wave3type, inst.wave3freq, inst.wave3Strength, envVal, waveform3Points);
-        RefreshSpectrogram(instrumentNum, envVal);            
+        if (mode == VisualizationMode.SingleInstrument)
+        {
+            RefreshWaveform(inst, envVal, mainWaveformPoints);
+            RefreshWaveform(inst.wave1type, inst.wave1freq, inst.wave1Strength, envVal, waveform1Points);
+            RefreshWaveform(inst.wave2type, inst.wave2freq, inst.wave2Strength, envVal, waveform2Points);
+            RefreshWaveform(inst.wave3type, inst.wave3freq, inst.wave3Strength, envVal, waveform3Points);
+            RefreshSpectrogram(instrumentNum, envVal, spectrogramBars);
+        }
+        else if (mode == VisualizationMode.AllInstruments)
+        {
+            RefreshWaveform(inst, envVal, allInstWaveformPoints[instrumentNum]);
+            RefreshSpectrogram(instrumentNum, envVal, allInstSpecBars[instrumentNum]);
+        }                
     }
 
     public float GetWaveformZoom()

@@ -14,7 +14,7 @@ public class ToggleScript : MonoBehaviour
     {
       toggle = gameObject.GetComponent<Toggle>();
       synthScript = synthVis.GetComponent<SynthVisualizer>();
-      toggle.isOn = (synthScript.mode == VisualizationMode.AllInstruments);
+      toggle.isOn = false;
       toggle.onValueChanged.AddListener (delegate {ValueChangeCheck ();});
     }
 
@@ -27,9 +27,9 @@ public class ToggleScript : MonoBehaviour
     public void ValueChangeCheck()
     {
       if(toggle.isOn){
-        synthScript.mode = VisualizationMode.AllInstruments;
+            synthScript.soundObjectOn = true;//singleSoundObject.SetActive(true);
       } else {
-        synthScript.mode = VisualizationMode.SingleInstrument;
-      }
+            synthScript.soundObjectOn = false;//singleSoundObject.SetActive(false);
+        }
     }
 }
